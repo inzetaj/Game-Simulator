@@ -32,9 +32,12 @@ import random
 
     make command for spell button - dont need to add too much in here, could just check spell name and what character
     
-need to fix crashing in the fight screen
 
 16. need to edit end turn button so that its deactivated when its not the players turn, and activated when it is the players turn
+17. need to include more tips - 
+    - for each spell a monster cast after a certain ammount of attacks they will gain dmg due to radiation
+    - you will lose 1 hp every turn due to radiation, so make sure to finish the fight quickly
+
     #spells button
     for spells gonna make an array 
     gonna make a panel to hold the buttons
@@ -46,8 +49,8 @@ need to fix crashing in the fight screen
                         will make it show an animation on the label with pictures and a time sleep 0.1 and have it move across the label -might ue ai for this part as a lot of work
                         then will calculate the spell dmg 
 
-    
-
+what i need to do next is fix labels not showing hp correctly after turn starts (think need to do a window update) and position of buttons and the size of buttons
+timer also freezes when i press end of turn - i think somehow the timer label isn't getting destroyed properly which results in that because got error saying cant acces timer_lab.destroy() because not associated with a value
 """                     
 #--------------------------------------------Global----------------------
 password = "password"
@@ -1381,14 +1384,18 @@ def fightscreen():
     global fightstatus
     global timer
 
-    timerafter = None #this is used when switching from character turn to monster turn after timer ends
     difficulty_choice = difficulty.get()
 
-    #used for calculations in fight to exit loop and also display variables - used so they dont change the innitial variables
-    fighthp = hp
-    #mhp is made inside  - monster hp
-    fightmp = mp
-    #mmp is made inside - monster mp
+    timerExists = False #used to check if the timer exists or not - if it does then it will be destroyed and a new one will be created
+    pressedEndTurn = False # this is to properly destroy countdown timer if player presses end turn button instead of waiting for the timer to run out - if this is true then the timer will be destroyed and a new one will be created
+
+        #used for calculations in fight to exit loop and also display variables - used so they dont change the innitial variables
+    fightHpandMpset = False
+    if fightHpandMpset == False:
+        fighthp = hp
+        #mhp is made inside  - monster hp
+        fightmp = mp
+        #mmp is made inside - monster mp
 
     #------------set background-----------
     #mob fight background
@@ -1409,174 +1416,183 @@ def fightscreen():
         #without this it wouldnt load for some reason - directly saving the whole bg 
         fightscreenimg_lab.image = fightscreenimg 
 
-    #-----------create character img & label/hp label & spell buttons and methods-------------
-  #label for character name
-    namelabel_text = tk.StringVar()
-    namelabel_text.set(f"{name} Lv. {currentlvl}")
+    try: 
+        #-----------create character img & label/hp label & spell buttons and methods-------------
+    #label for character name
+        namelabel_text = tk.StringVar()
+        namelabel_text.set(f"{name} Lv. {currentlvl}")
 
-    name_lab= tk.Label(window, textvariable=namelabel_text, font = ("Ariel", 18, "bold"), fg="black", bg="purple") #compount top basically makes everything stack on top of each other and whatever goes first is at top
-    name_lab.place(relx=0.21, rely=0.31, anchor="center") # "w" anchors it to the West/Left side
+        name_lab= tk.Label(window, textvariable=namelabel_text, font = ("Ariel", 18, "bold"), fg="black", bg="purple") #compount top basically makes everything stack on top of each other and whatever goes first is at top
+        name_lab.place(relx=0.21, rely=0.31, anchor="center") # "w" anchors it to the West/Left side
 
-    characterimgs_lab= tk.Label(window, image=None, bg="purple")
-    characterimgs_lab.place(relx=0.21, rely=0.55, anchor="center") # "w" anchors it to the West/Left side    
+        characterimgs_lab= tk.Label(window, image=None, bg="purple")
+        characterimgs_lab.place(relx=0.21, rely=0.55, anchor="center") # "w" anchors it to the West/Left side    
 
-    #character image
-    if character_selected == "Warrior":
+        #character image
+        if character_selected == "Warrior":
 
-        if gender == "Female":
-            #switches the preview img for warrior
-            f_warriorimg = tk.PhotoImage(file="f_warrior.png")
-            characterimgs_lab.config(image=f_warriorimg)
-            characterimgs_lab.image = f_warriorimg
+            if gender == "Female":
+                #switches the preview img for warrior
+                f_warriorimg = tk.PhotoImage(file="f_warrior.png")
+                characterimgs_lab.config(image=f_warriorimg)
+                characterimgs_lab.image = f_warriorimg
 
-        else:
-            #switches the preview img
-            m_warriorimg = tk.PhotoImage(file="m_warrior.png")
-            characterimgs_lab.config(
-                image=m_warriorimg
-            )
-            characterimgs_lab.image = m_warriorimg
-
-        window.update()
-
-    elif character_selected == "Mage":
-
-        if gender == "Female":
-            #switches the preview img for mage
-            f_mageimg = tk.PhotoImage(file="f_mage.png")
-            characterimgs_lab.config(image=f_mageimg)
-            characterimgs_lab.image = f_mageimg
-        
-        else:
-            #switches the preview img
-            m_mageimg = tk.PhotoImage(file="m_mage.png")
-            characterimgs_lab.config(
-                image=m_mageimg
-            )
-            characterimgs_lab.image = m_mageimg
-
-        window.update()
-
-    elif character_selected == "Healer":
-
-        if gender == "Female":
-            #switches the preview img for healer
-            f_healerimg = tk.PhotoImage(file="f_healer.png")
-            characterimgs_lab.config(image=f_healerimg)
-            characterimgs_lab.image = f_healerimg
-
-        else: #switches the preview img
-            m_healerimg = tk.PhotoImage(file="m_healer.png")
-            characterimgs_lab.config(image=m_healerimg)
-            characterimgs_lab.image = m_healerimg
+            else:
+                #switches the preview img
+                m_warriorimg = tk.PhotoImage(file="m_warrior.png")
+                characterimgs_lab.config(
+                    image=m_warriorimg
+                )
+                characterimgs_lab.image = m_warriorimg
 
             window.update()
-    
-    #----------------------set monster img/stats/experience gained from that monster/ hp label----------------
-    
-    #difficulty stat diffrentiator(just have to multiple this with the chosen stat) + the experience ammount will get after fight + the lvl that will be displayed
 
-    baseexpgained = 30 * (1.20 ** (currentlvl - 1)) #grows by 20% each level
+        elif character_selected == "Mage":
 
-    if difficulty_choice == "Easy":
-        difficulty_multiplier = 0.50
-        monsterlvl = currentlvl/2
+            if gender == "Female":
+                #switches the preview img for mage
+                f_mageimg = tk.PhotoImage(file="f_mage.png")
+                characterimgs_lab.config(image=f_mageimg)
+                characterimgs_lab.image = f_mageimg
+            
+            else:
+                #switches the preview img
+                m_mageimg = tk.PhotoImage(file="m_mage.png")
+                characterimgs_lab.config(
+                    image=m_mageimg
+                )
+                characterimgs_lab.image = m_mageimg
 
-    elif difficulty_choice == "Normal":
-        difficulty_multiplier = 1 #doesn't increase stats or decrease
-        monsterlvl = currentlvl
+            window.update()
 
-    elif difficulty_choice == "Hard":
-        difficulty_multiplier = 1.25
-        monsterlvl = currentlvl*1.25
+        elif character_selected == "Healer":
 
-    elif difficulty_choice == "Difficult":
-        difficulty_multiplier = 1.50
-        monsterlvl = currentlvl/2 + currentlvl
+            if gender == "Female":
+                #switches the preview img for healer
+                f_healerimg = tk.PhotoImage(file="f_healer.png")
+                characterimgs_lab.config(image=f_healerimg)
+                characterimgs_lab.image = f_healerimg
 
-    #label for monster name 
-    mnamelabel_text = tk.StringVar()
-    mnamelabel_text.set(f"{monstername} Lv. {monsterlvl}")
+            else: #switches the preview img
+                m_healerimg = tk.PhotoImage(file="m_healer.png")
+                characterimgs_lab.config(image=m_healerimg)
+                characterimgs_lab.image = m_healerimg
 
-    mname_lab = tk.Label(window, textvariable=mnamelabel_text, font = ("Ariel", 18, "bold"), fg="black", bg="purple") #compount top basically makes everything stack on top of each other and whatever goes first is at top
-    mname_lab.place(relx=0.8, rely=0.2, anchor="center")
-
-    #label for the monster img
-    monster_imgs_lab= tk.Label(window, image=None, bg="purple")
-    monster_imgs_lab.place(relx=0.8, rely=0.5, anchor="center")  
- 
-    #monster imgs and stats, assigned new temporary variables so that the main value doesnt change and only the values inside the fight will change
-    if monstername == "Hierophant":
-
-        monster_img = tk.PhotoImage(file="Hierophant.png")
-        monster_imgs_lab.config(image=monster_img)
-        monster_imgs_lab.image = monster_img
-
-        #stats
-        mhp = monsters[3]["hp"]*difficulty_multiplier
-        mmp = monsters[3]["mp"]*difficulty_multiplier
-        mphysical_defence = monsters[3]["physical_defence"] *difficulty_multiplier
-        mmagical_defence = monsters[3]["magical_defence"] *difficulty_multiplier
-        mphysical_dmg = monsters[3]["physical_dmg"] *difficulty_multiplier
-        mmagical_dmg = monsters[3]["magical_dmg"] *difficulty_multiplier
-
-    elif monstername == "Goylca":
-
-        monster_img = tk.PhotoImage(file="Goylca.png")
-        monster_imgs_lab.config(image=monster_img)
-        monster_imgs_lab.image = monster_img
-
-        mhp = monsters[0]["hp"]*difficulty_multiplier
-        mmp = monsters[0]["mp"]*difficulty_multiplier
-        mphysical_defence = monsters[0]["physical_defence"] *difficulty_multiplier
-        mmagical_defence = monsters[0]["magical_defence"] *difficulty_multiplier
-        mphysical_dmg = monsters[0]["physical_dmg"] *difficulty_multiplier
-        mmagical_dmg = monsters[0]["magical_dmg"] *difficulty_multiplier
+                window.update()
         
-    elif monstername == "Krosmo Crusher":
+        #----------------------set monster img/stats/experience gained from that monster/ hp label----------------
+        
+        #difficulty stat diffrentiator(just have to multiple this with the chosen stat) + the experience ammount will get after fight + the lvl that will be displayed
 
-        monster_img = tk.PhotoImage(file="Krosmo Crusher.png")
-        monster_imgs_lab.config(image=monster_img)
-        monster_imgs_lab.image = monster_img
+        baseexpgained = 30 * (1.20 ** (currentlvl - 1)) #grows by 20% each level
 
-        mhp = monsters[2]["hp"] *difficulty_multiplier
-        mmp = monsters[2]["mp"]*difficulty_multiplier
-        mphysical_defence = monsters[2]["physical_defence"] *difficulty_multiplier
-        mmagical_defence = monsters[2]["magical_defence"] *difficulty_multiplier
-        mphysical_dmg = monsters[2]["physical_dmg"] *difficulty_multiplier
-        mmagical_dmg = monsters[2]["magical_dmg"] *difficulty_multiplier
+        if difficulty_choice == "Easy":
+            difficulty_multiplier = 0.50
+            monsterlvl = currentlvl/2
 
-    elif monstername == "Bulmar":
+        elif difficulty_choice == "Normal":
+            difficulty_multiplier = 1 #doesn't increase stats or decrease
+            monsterlvl = currentlvl
 
-        monster_img = tk.PhotoImage(file="Bulmar.png")
-        monster_imgs_lab.config(image=monster_img)
-        monster_imgs_lab.image = monster_img
+        elif difficulty_choice == "Hard":
+            difficulty_multiplier = 1.25
+            monsterlvl = currentlvl*1.25
 
-        mhp = monsters[1]["hp"] *difficulty_multiplier
-        mmp = monsters[1]["mp"]*difficulty_multiplier
-        mphysical_defence = monsters[1]["physical_defence"] *difficulty_multiplier
-        mmagical_defence = monsters[1]["magical_defence"] *difficulty_multiplier
-        mphysical_dmg = monsters[1]["physical_dmg"] *difficulty_multiplier
-        mmagical_dmg = monsters[1]["magical_dmg"] *difficulty_multiplier
+        elif difficulty_choice == "Difficult":
+            difficulty_multiplier = 1.50
+            monsterlvl = currentlvl/2 + currentlvl
+
+        #label for monster name 
+        mnamelabel_text = tk.StringVar()
+        mnamelabel_text.set(f"{monstername} Lv. {monsterlvl}")
+
+        mname_lab = tk.Label(window, textvariable=mnamelabel_text, font = ("Ariel", 18, "bold"), fg="black", bg="purple") #compount top basically makes everything stack on top of each other and whatever goes first is at top
+        mname_lab.place(relx=0.8, rely=0.2, anchor="center")
+
+        #label for the monster img
+        monster_imgs_lab= tk.Label(window, image=None, bg="purple")
+        monster_imgs_lab.place(relx=0.8, rely=0.5, anchor="center")  
+    
+        #monster imgs and stats, assigned new temporary variables so that the main value doesnt change and only the values inside the fight will change
+
+        if fightHpandMpset == False: # here so when this screen is called again it doesnt reset monster hp
+
+            if monstername == "Hierophant":
+
+                monster_img = tk.PhotoImage(file="Hierophant.png")
+                monster_imgs_lab.config(image=monster_img)
+                monster_imgs_lab.image = monster_img
+
+                #stats
+                mhp = monsters[3]["hp"]*difficulty_multiplier
+                mmp = monsters[3]["mp"]*difficulty_multiplier
+                mphysical_defence = monsters[3]["physical_defence"] *difficulty_multiplier
+                mmagical_defence = monsters[3]["magical_defence"] *difficulty_multiplier
+                mphysical_dmg = monsters[3]["physical_dmg"] *difficulty_multiplier
+                mmagical_dmg = monsters[3]["magical_dmg"] *difficulty_multiplier
+
+            elif monstername == "Goylca":
+
+                monster_img = tk.PhotoImage(file="Goylca.png")
+                monster_imgs_lab.config(image=monster_img)
+                monster_imgs_lab.image = monster_img
+
+                mhp = monsters[0]["hp"]*difficulty_multiplier
+                mmp = monsters[0]["mp"]*difficulty_multiplier
+                mphysical_defence = monsters[0]["physical_defence"] *difficulty_multiplier
+                mmagical_defence = monsters[0]["magical_defence"] *difficulty_multiplier
+                mphysical_dmg = monsters[0]["physical_dmg"] *difficulty_multiplier
+                mmagical_dmg = monsters[0]["magical_dmg"] *difficulty_multiplier
+                
+            elif monstername == "Krosmo Crusher":
+
+                monster_img = tk.PhotoImage(file="Krosmo Crusher.png")
+                monster_imgs_lab.config(image=monster_img)
+                monster_imgs_lab.image = monster_img
+
+                mhp = monsters[2]["hp"] *difficulty_multiplier
+                mmp = monsters[2]["mp"]*difficulty_multiplier
+                mphysical_defence = monsters[2]["physical_defence"] *difficulty_multiplier
+                mmagical_defence = monsters[2]["magical_defence"] *difficulty_multiplier
+                mphysical_dmg = monsters[2]["physical_dmg"] *difficulty_multiplier
+                mmagical_dmg = monsters[2]["magical_dmg"] *difficulty_multiplier
+
+            elif monstername == "Bulmar":
+
+                monster_img = tk.PhotoImage(file="Bulmar.png")
+                monster_imgs_lab.config(image=monster_img)
+                monster_imgs_lab.image = monster_img
+
+                mhp = monsters[1]["hp"] *difficulty_multiplier
+                mmp = monsters[1]["mp"]*difficulty_multiplier
+                mphysical_defence = monsters[1]["physical_defence"] *difficulty_multiplier
+                mmagical_defence = monsters[1]["magical_defence"] *difficulty_multiplier
+                mphysical_dmg = monsters[1]["physical_dmg"] *difficulty_multiplier
+                mmagical_dmg = monsters[1]["magical_dmg"] *difficulty_multiplier
+        
 
     #----------------------------basic display labels-----------------------------
-    #label for the character hp
-    hplab_text = tk.StringVar()
-    hplab_text.set(f"{fighthp}")
-
-    hp_lab= tk.Label(window, textvariable=f"{hplab_text}", font = ("Ariel", 16, "bold"), fg="black", bg="purple")
-    hp_lab.place(relx=0.4, rely=0.95, anchor="center")  
-
-    #vs label
-    vs_lab= tk.Label(window, text="vs", font = ("Ariel", 16, "bold"), fg="black", bg="purple")
-    vs_lab.place(relx=0.5, rely=0.95, anchor="center")  
     
-    #label for the monster hp
-    mhplab_text = tk.StringVar()
-    mhplab_text.set(f"{mhp}")
+        #label for the character hp
+        hplab_text = tk.StringVar()
+        hplab_text.set(f"{fighthp}")
 
-    mhp_lab= tk.Label(window, textvariable=f"{mhplab_text}", font = ("Ariel", 16, "bold"), fg="black", bg="purple")
-    mhp_lab.place(relx=0.6, rely=0.95, anchor="center")  
+        hp_lab= tk.Label(window, textvariable=f"{hplab_text}", font = ("Ariel", 16, "bold"), fg="black", bg="purple")
+        hp_lab.place(relx=0.4, rely=0.95, anchor="center")  
+
+        #vs label
+        vs_lab= tk.Label(window, text="vs", font = ("Ariel", 16, "bold"), fg="black", bg="purple")
+        vs_lab.place(relx=0.5, rely=0.95, anchor="center")  
+        
+        #label for the monster hp
+        mhplab_text = tk.StringVar()
+        mhplab_text.set(f"{mhp}")
+
+        mhp_lab= tk.Label(window, textvariable=f"{mhplab_text}", font = ("Ariel", 16, "bold"), fg="black", bg="purple")
+        mhp_lab.place(relx=0.6, rely=0.95, anchor="center")  
+
+    except:
+        print("Already made")
 
     #----------------------------Turn label & img -----------------------------------------------
     #label for turns - should say turn then will make a counter that will update it text=f"Turn", textvariable=
@@ -1584,12 +1600,16 @@ def fightscreen():
     turnlab_text = tk.StringVar()
     turnlab_text.set(f"Turn: {turn}")
 
-    turn_lab= tk.Label(window, textvariable=f"{turnlab_text}", font = ("Ariel", 20, "bold"), fg="black", bg="purple")
-    turn_lab.place(relx=0.93, rely=0.85, anchor="center")
+    try:
+        turn_lab= tk.Label(window, textvariable=f"{turnlab_text}", font = ("Ariel", 20, "bold"), fg="black", bg="purple")
+        turn_lab.place(relx=0.93, rely=0.85, anchor="center")
 
-    #label for turn icon imgs, - will be for the turn and when its your turn it will config to show img and will keep switching
-    yourturnimg_lab = tk.Label(window, img =None, fg="black", bg="purple")
-    yourturnimg_lab.place(relx=0.93, rely=0.9, anchor="center")
+        #label for turn icon imgs, - will be for the turn and when its your turn it will config to show img and will keep switching
+        yourturnimg_lab = tk.Label(window, img =None, fg="black", bg="purple")
+        yourturnimg_lab.place(relx=0.93, rely=0.9, anchor="center")
+
+    except:
+        print("Already made")
 
     #character turn image icon
     if character_selected == "Warrior":
@@ -1640,8 +1660,7 @@ def fightscreen():
         window.update()
     
     #--------------------------------------------------after fight calculations fight mechs---------------------------------------------------------------------------
-    #still need to edit end fight
-
+    #still need to edit end fight - thinking of making an if in the original fight screen which will check the hp n stuff then it will destroy everything and call end fight
     #triggers fight experience and debuff calculations then sends to loading page if someone dies or press end fight button - still need to put the destroy parts - will connect it with the spell functions later on to determine if fight ends
     def end_fight():
         global fightstatus
@@ -1655,6 +1674,7 @@ def fightscreen():
         global currentlvl
         global pastlvl
         global currentexp
+        nonlocal fighthp
 
         
         if fighthp != 0:
@@ -1671,7 +1691,10 @@ def fightscreen():
             magical_defence/1.5
             physical_defence/1.5
             basedmg/1.5
-        elif mhp == 0:
+
+        if mhp != 0:
+            mhp = 0
+        if mhp <= 0:
             currentexp = currentexp + (baseexpgained*difficulty_multiplier)
 
         fightstatus = "Fight Ended"
@@ -1752,179 +1775,43 @@ def fightscreen():
     #counts down timer and creates/destroys timer label
     def countdown():
         global timer
+        nonlocal timerExists
+        nonlocal pressedEndTurn
 
-            #timer label - fight will have a timer of 60 seconds, can increase if they play fast, timer will start automatically - the number will be changed in the loop
-        timer = 60 #sets the timer to 60 seconds for the character turn - will be used in the countdown def
-        timerlab_text = tk.StringVar()
-        timerlab_text.set(f"{timer}")
+        if pressedEndTurn == True: #this is to properly destroy countdown timer if player presses end turn button instead of waiting for the timer to run out - if this is true then the timer will be destroyed and a new one will be created
+            timer_lab.destroy() #destroys the timer label when it reaches 0
+            timerExists = False
+            pressedEndTurn = False
 
-        timer_lab= tk.Label(window, textvariable=f"{timerlab_text}", font = ("Ariel", 24, "bold"), fg="black", bg="purple")
-        timer_lab.place(relx=0.5, rely=0.1, anchor="center")
-                # delete the timer in countdown def(might move the timer label to there) 
+        #timer label - fight will have a timer of 60 seconds, can increase if they play fast, timer will start automatically - the number will be changed in the loop
+            #the if is for checking if the label already exists so it doesnt create duplicates
+        if timerExists == True:
+            pass
+        else:
+            timerlab_text = tk.StringVar()
+            timerlab_text.set(f"{timer}")
+
+            timer_lab= tk.Label(window, textvariable=f"{timerlab_text}", font = ("Ariel", 24, "bold"), fg="black", bg="purple")
+            timer_lab.place(relx=0.5, rely=0.1, anchor="center")
+
+        #this is here for end fight procedures - need to destroy timer label
+        if fighthp <= 0 or mhp <= 0:
+            if timerExists == True:
+                timer_lab.destroy() #destroys the timer label when it reaches 0
+                timerExists = False
+            end_fight() #makes it complete end fight procedures.
+                
         if timer > 0:
             timer -= 1
-            window.after(1, countdown) #this repeats the countdown function every 1 second so can make it count down
+            window.after(1000, countdown) #this repeats the countdown function every 1 second so can make it count down
+
         else: 
-            window.destroy(timer_lab) #destroys the timer label when it reaches 0
+            timer_lab.destroy() #destroys the timer label when it reaches 0
+            timerExists = False
             monster_turn() #makes it switch to monster turn when timer reaches 0
-    
-    #---------------------------------------------turn defs---------------------------------------------------------------------------
-    while fighthp > 0 and mhp > 0:     #will keep switching turns until someone dies or end fight button is clicked 
-        def monster_turn():        #need to add attack parts
-
-            nonlocal fightmp 
-            nonlocal mmp
-            nonlocal turn 
-            global timer
-            nonlocal fighthp
-            nonlocal mhp
-
-            time.sleep(1.5) #makes it wait a second before switching turns
-
-                #function that calculates new timer and destroys timer label - timer wont start counting down till its your turn
-            if timer != 0:
-                leftovertimer = timer
-                timer = leftovertimer + 30
-                countdown()
-
-            elif timer == 0:
-                timer = 30
-
-            #add function that configures turn img to monster preview img - didnt configure this yet
-            if monstername == "Hierophant":
-
-                monster_imgicon = tk.PhotoImage(file="Hierophanticon.png")
-                yourturnimg_lab.config(image=monster_img)
-                yourturnimg_lab.image = monster_imgicon
-
-            elif monstername == "Goylca":
-
-                monster_imgicon = tk.PhotoImage(file="Goylca_icon.png")
-                yourturnimg_lab.config(image=monster_imgicon)
-                yourturnimg_lab.image = monster_imgicon
-            
-            elif monstername == "Krosmo Crusher":
-
-                monster_imgicon = tk.PhotoImage(file="Krosmo Crushericon.png")
-                yourturnimg_lab.config(image=monster_imgicon)
-                yourturnimg_lab.image = monster_imgicon
-
-            elif monstername == "Bulmar":
-
-                monster_imgicon = tk.PhotoImage(file="Bulmaricon.png")
-                yourturnimg_lab.config(image=monster_imgicon)
-                yourturnimg_lab.image = monster_imgicon
-
-            # for when the player makes the mp go into negative it buffs monster and monster skips turn
-            if mmp < 0:
-                mmp = 0
-                mmp +=20
-                mmagical_dmg*2
-                mphysical_dmg*2
-
-            #attacks and end turn
-            else:
-
-                #could also include the monster def actions, such as him hitting the player
-                """
-                will do an if for attacks by turn
-                    if turn/5 = 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 - for the fifth turns
-                    elif turn 4 = 
-                    elif turn /3 = 
-                    elif turn /2= 
-                    else
-
-                will do an array for type of attacks - will never use all mp - all monsters will have a 
-            
-                while loop for monster attack animation 
-                        to make it pop up the spell animation label will make an empty label img and when a spell is triggered it configures the img and at the end it clears the img
-                        updates spell position - (basically make a variable and make it = to the x of the starting position then put that variable in its place -  in the loop each time increase the value of the variable - can end the loop once the x is = to this for example)-
-                        after it reaches x position a label with the total dmg will pop up
-                        will do a .after to destroy the label for the pop up total dmg
-                        
-                """
-            
-            #----end of turn stuff-------
-            time.sleep(1.5) #makes wait before switch turns
-
-            #end of turn mp recovery
-            fightmp += 1
-            mmp +=1
-                
-            turn += 1 # updates turn label by 1
-            character_turn()    
-
-        def character_turn():
-            nonlocal turn 
         
-            countdown()
+        window.update()
 
-            #updates the character turn icon but not for turn 1
-            if turn > 1:
-            
-                if character_selected == "Warrior":
-
-                    if gender == "Female":
-                        #switches the preview img for warrior
-                        turniconimg = tk.PhotoImage(file="f_warrioricon.png")
-                        yourturnimg_lab.config(image=turniconimg)
-                        yourturnimg_lab.image = turniconimg
-
-                    else:
-                        #switches the preview img
-                        turniconimg = tk.PhotoImage(file="m_warrioricon.png")
-                        yourturnimg_lab.config(image=turniconimg)
-                        yourturnimg_lab.image = turniconimg
-
-                    window.update()
-
-                elif character_selected == "Mage":
-
-                    if gender == "Female":
-                        #switches the preview img for mage
-                        turniconimg = tk.PhotoImage(file="f_mageicon.png")
-                        yourturnimg_lab.config(image=turniconimg)
-                        yourturnimg_lab.image = turniconimg
-                    
-                    else:
-                        #switches the preview img
-                        turniconimg = tk.PhotoImage(file="m_mageicon.png")
-                        yourturnimg_lab.config(image=turniconimg)
-                        yourturnimg_lab.image = turniconimg
-
-                    window.update()
-
-                elif character_selected == "Healer":
-
-                    if gender == "Female":
-                        #switches the preview img for healer
-                        turniconimg = tk.PhotoImage(file="f_healericon.png")
-                        yourturnimg_lab.config(image=turniconimg)
-                        yourturnimg_lab.image = turniconimg
-
-                    else: #switches the preview img
-                        turniconimg = tk.PhotoImage(file="m_healericon.png")
-                        yourturnimg_lab.config(image=turniconimg)
-                        yourturnimg_lab.image = turniconimg
-
-                    window.update()
-                
-
-
-                    #basically sends it to after fight calculations - checks to see if someone died
-                    if fighthp == 0:
-                        return
-
-                    elif mhp == 0:
-                        return      
-
-        character_turn()
-  
-    end_fight()
-
-       #-----------create spell methods and spell buttons----------------
-        #think will move this inside of character turn and have it deleted at end so people can click buttons or deactivate buttons if def = monster turn
-                      
     """DO THIS AFTER YOU MADE BUTTONS SO CAN USE BUTTON NAMES
     if character_selected == "Warrior":
         def spellactivation():
@@ -1945,18 +1832,237 @@ def fightscreen():
         #need to include the end fight fucntion here
     """
 
-    #--------------------------------general buttons----------------------------
+    #---------------------------------------------turn defs---------------------------------------------------------------------------
+    #gonna remove the loop and just make a new function the will be called when need to check if hp < 0. it already switches turns between each other
+    
+    def end_turn():
+        nonlocal pressedEndTurn
+        pressedEndTurn = True #this is to properly destroy countdown timer if player presses end turn
+        monster_turn()
+
+    def monster_turn():        #need to add attack parts
+
+            #will have to edit end turn where it activates countdown as well
+        nonlocal fightmp 
+        nonlocal mmp
+        nonlocal turn 
+        global timer
+        nonlocal fighthp
+        nonlocal mhp
+        nonlocal pressedEndTurn
+        nonlocal fightHpandMpset # this is set because when anyone dies dont want the hp to reset
+
+        if pressedEndTurn == False: #this is to properly destroy countdown timer if player calls end turn command
+            pass
+        else: 
+            countdown() #
+
+        time.sleep(1.5) #makes it wait a second before switching turns
+
+                #function that calculates new timer and destroys timer label - timer wont start counting down till its your turn
+        if timer != 0:
+            leftovertimer = timer
+            timer = leftovertimer + 30
+            countdown()
+
+        elif timer == 0:
+            timer = 30
+
+        #thi changes the turn icon from character img to monster img so you know its tthe monsters turn.
+        if monstername == "Hierophant":
+
+            monster_imgicon = tk.PhotoImage(file="Hierophanticon.png")
+            yourturnimg_lab.config(image=monster_img)
+            yourturnimg_lab.image = monster_imgicon
+
+        elif monstername == "Goylca":
+
+            monster_imgicon = tk.PhotoImage(file="Goylca_icon.png")
+            yourturnimg_lab.config(image=monster_imgicon)
+            yourturnimg_lab.image = monster_imgicon
+            
+        elif monstername == "Krosmo Crusher":
+
+            monster_imgicon = tk.PhotoImage(file="Krosmo Crushericon.png")
+            yourturnimg_lab.config(image=monster_imgicon)
+            yourturnimg_lab.image = monster_imgicon
+
+        elif monstername == "Bulmar":
+
+            monster_imgicon = tk.PhotoImage(file="Bulmaricon.png")
+            yourturnimg_lab.config(image=monster_imgicon)
+            yourturnimg_lab.image = monster_imgicon
+
+            # for when the player makes the mp go into negative it buffs monster and monster skips turn
+        
+        if mmp < 0: #for if the player makes the mp go into negative it buffs monster
+            mmp = 0
+            mmp +=20
+            mmagical_dmg*2
+            mphysical_dmg*2
+
+        else:                  #attacks - will also include function where if monster kills player it will end fight/ - going to make monster spells in a loop - will make it do 3 attacks per turn or until it runs out of mp - was going to do a turn thing where thain gain dmg on dif turns but think will switch it to they gain damage depending on how many attacks they do so for example if the dmg count is 9 they gain dmg/spell dmg
+
+            
+                #could also include the monster def actions, such as him hitting the player
+                """
+                will do an if for attacks by turn
+                    if turn/5 = 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 - for the fifth turns
+                    elif turn 4 = 
+                    elif turn /3 = 
+                    elif turn /2= 
+                    else
+
+                will do an array for type of attacks - will never use all mp - all monsters will have a 
+            
+                while loop for monster attack animation 
+                        to make it pop up the spell animation label will make an empty label img and when a spell is triggered it configures the img and at the end it clears the img
+                        updates spell position - (basically make a variable and make it = to the x of the starting position then put that variable in its place -  in the loop each time increase the value of the variable - can end the loop once the x is = to this for example)-
+                        after it reaches x position a label with the total dmg will pop up
+                        will do a .after to destroy the label for the pop up total dmg
+                        
+                """
+            
+        #-----------------end of turn stuff--------------------
+
+            #basically sends it to after fight calculations or next turn - checks to see if someone died
+        if fighthp <= 0 or mhp <= 0:
+            fightHpandMpset == True # this is set because need this so that the current hp of the monster and fighter dont change when i send it back to fight screen
+            fightscreen()
+        else:
+            time.sleep(1.5) #makes wait before switch turns
+
+            #end of turn mp recovery
+            fightmp += 1
+            mmp +=1
+                
+            turn += 1 # updates turn label by 1            
+            character_turn()
+
+    def character_turn():
+        nonlocal turn 
+        nonlocal timerExists
+        nonlocal fighthp
+        nonlocal fightHpandMpset # this is set because when anyone dies dont want the hp to reset
+
+        timerExists = False #used to check if the timer exists or not - if it does then it will be destroyed and a new one will be created
+        fighthp -= 1 #this is here for radiation, at start of turn player loses 1 hp - will add a check if it kills user             
+           
+            #if is here to check if radiation would end the fight
+        if fighthp <= 0 or mhp <= 0:
+            fightHpandMpset == True # this is set because need this so that the current hp of the monster and fighter dont change when i send it back to fight screen
+            fightscreen()
+
+        countdown() #starts the countdown timer for the turn
+
+            #updates the character turn icon but not for turn 1
+        if turn > 1:
+            
+            if character_selected == "Warrior":
+
+                if gender == "Female":
+                    #switches the preview img for warrior
+                    turniconimg = tk.PhotoImage(file="f_warrioricon.png")
+                    yourturnimg_lab.config(image=turniconimg)
+                    yourturnimg_lab.image = turniconimg
+
+                else:
+                    #switches the preview img
+                    turniconimg = tk.PhotoImage(file="m_warrioricon.png")
+                    yourturnimg_lab.config(image=turniconimg)
+                    yourturnimg_lab.image = turniconimg
+
+                window.update()
+
+            elif character_selected == "Mage":
+
+                if gender == "Female":
+                    #switches the preview img for mage
+                    turniconimg = tk.PhotoImage(file="f_mageicon.png")
+                    yourturnimg_lab.config(image=turniconimg)
+                    yourturnimg_lab.image = turniconimg
+                    
+                else:
+                    #switches the preview img
+                    turniconimg = tk.PhotoImage(file="m_mageicon.png")
+                    yourturnimg_lab.config(image=turniconimg)
+                    yourturnimg_lab.image = turniconimg
+
+                window.update()
+
+            elif character_selected == "Healer":
+
+                if gender == "Female":
+                    #switches the preview img for healer
+                    turniconimg = tk.PhotoImage(file="f_healericon.png")
+                    yourturnimg_lab.config(image=turniconimg)
+                    yourturnimg_lab.image = turniconimg
+
+                else: #switches the preview img
+                    turniconimg = tk.PhotoImage(file="m_healericon.png")
+                    yourturnimg_lab.config(image=turniconimg)
+                    yourturnimg_lab.image = turniconimg
+
+                window.update()
+                
+
+
+                #basically sends it to after fight calculations - checks to see if someone died
+                if fighthp == 0:
+                    return
+
+                elif mhp == 0:
+                    return      
+
+        #if is here to check if anything happend that would end the fight like a spell
+        if fighthp <= 0 or mhp <= 0:
+            fightHpandMpset == True # this is set because need this so that the current hp of the monster and fighter dont change when i send it back to fight screen
+
+            fightscreen()
+
+   #--------------------------------general buttons----------------------------
     #end turn button 
-    endturn_but = tk.Button(window, text="End Turn", bg="#00A8FF", font=("Ariel", 16, "bold"), command=monster_turn, bd=2, width=10, height=2)
-    endturn_but.place(relx=0.7, rely=0.86, anchor="center")
+    try:
+        endturn_but = tk.Button(window, text="End Turn", bg="#00A8FF", font=("Ariel", 16, "bold"), command=end_turn, bd=2, width=10, height=2)
+        endturn_but.place(relx=0.7, rely=0.86, anchor="center")
 
-    #end fight 
-    endfight_but = tk.Button(window, text="End Fight", bg="#00A8FF", font=("Ariel", 16, "bold"), command=end_fight, bd=2, width=10, height=2)
-    endfight_but.place(relx=0.2, rely=0.86, anchor="center")
+        #end fight 
+        endfight_but = tk.Button(window, text="End Fight", bg="#00A8FF", font=("Ariel", 16, "bold"), command=end_fight, bd=2, width=10, height=2)
+        endfight_but.place(relx=0.2, rely=0.86, anchor="center")
 
-    #check monter stats 
-    monsterstats_but = tk.Button(window, text="Monster Stats", bg="#00A8FF", font=("Ariel", 16, "bold"), command=monsterStatsWindow, bd=2, width=10, height=2)
-    monsterstats_but.place(relx=0.23, rely=0.86, anchor="center")
+        #check monter stats 
+        monsterstats_but = tk.Button(window, text="Monster Stats", bg="#00A8FF", font=("Ariel", 16, "bold"), command=monsterStatsWindow, bd=2, width=10, height=2)
+        monsterstats_but.place(relx=0.23, rely=0.86, anchor="center")
 
+    except:
+        print("Already made")
+
+    #THIS is the main key for ending the fight - if either the monster or player hp is 0 then it will destroy everything and go to end fight def
+    if fighthp <= 0 or mhp <= 0:
+        print("Fight has ended")
+        #destroy everything
+        try:
+            endfight_but.destroy()
+            endturn_but.destroy()
+            monsterstats_but.destroy()
+            yourturnimg_lab.destroy()
+            mname_lab.destroy()
+            mhp_lab.destroy()
+            characterimgs_lab.destroy()
+            name_lab.destroy() 
+            hp_lab.destroy()
+            turn_lab.destroy()
+            fightHpandMpset == False # this is set because need this so that the current hp of the monster and fighter dont change when i send it back to fight screen
+
+        except:
+            pass
+
+        countdown() #this is here so that if the fight ends it will destroy the timer label and reset the timer to 0 for next fight and then it will go to end fght def in there.
+    else:
+        character_turn() #this is what actually starts the fight - its here because when the fight needs to end gonna send it back to fighting screen so i can properly destroy everything.
+        
+       #-----------create spell methods and spell buttons----------------
+        #think will move this inside of character turn and have it deleted at end so people can click buttons or deactivate buttons if def = monster turn
+                      
 #Run window
 window.mainloop()
