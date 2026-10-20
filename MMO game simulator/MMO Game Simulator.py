@@ -24,7 +24,12 @@ import random
 14. explain dmg calculations in stat page
 15. edit code to include a tutorial
 
-    #was working on general buttons - need to edit position 
+    #need to fix monster stats window, last text needs to be wrapped
+    #want to move monster stats near end of fight button and edit it abit
+    #need to make an if for if press end fight while hp above 0 then it will count as your lost
+    #next will work on the spell buttons
+
+
     #after that going to go ahead and do the monster attack and animations, character stuff will be copying and pasting from ehre and will be much more work
     #  next making spell array
     #need to check loading page make sure leaving fightingpage works properly
@@ -1594,13 +1599,12 @@ def fightscreen():
     except:
         print("Already made")
 
-    #----------------------------Turn label & img -----------------------------------------------
-    #label for turns - should say turn then will make a counter that will update it text=f"Turn", textvariable=
-    turn = 1
-    turnlab_text = tk.StringVar()
-    turnlab_text.set(f"Turn: {turn}")
-
     try:
+        #----------------------------Turn label & img -----------------------------------------------
+        #label for turns - should say turn then will make a counter that will update it text=f"Turn", textvariable=
+        turn = 1
+        turnlab_text = tk.StringVar()
+        turnlab_text.set(f"Turn: {turn}")        
         turn_lab= tk.Label(window, textvariable=f"{turnlab_text}", font = ("Ariel", 20, "bold"), fg="black", bg="purple")
         turn_lab.place(relx=0.93, rely=0.85, anchor="center")
 
@@ -1608,8 +1612,22 @@ def fightscreen():
         yourturnimg_lab = tk.Label(window, img =None, fg="black", bg="purple")
         yourturnimg_lab.place(relx=0.93, rely=0.9, anchor="center")
 
-    except:
-        print("Already made")
+    except Exception as e:
+        print("Already made turn label and turn img icon or ", e)
+
+
+    def hpVariablesCheck(): #this will be used whenever something is expected to take hp from monster or player and will also do an hp check to see if anyone died
+        #could also incorporate the check if a player dies in here too
+        nonlocal fighthp
+        nonlocal mhp
+        nonlocal fightHpandMpset
+
+        hplab_text.set(f"{fighthp}")
+        mhplab_text.set(f"{mhp}")
+
+        if fighthp <= 0 or mhp <= 0:
+            fightHpandMpset == True # this is set because need this so that the current hp of the monster and fighter dont change when i send it back to fight screen
+            fightscreen()
 
     #character turn image icon
     if character_selected == "Warrior":
@@ -1659,23 +1677,15 @@ def fightscreen():
 
         window.update()
     
-    #--------------------------------------------------after fight calculations fight mechs---------------------------------------------------------------------------
-    #still need to edit end fight - thinking of making an if in the original fight screen which will check the hp n stuff then it will destroy everything and call end fight
-    #triggers fight experience and debuff calculations then sends to loading page if someone dies or press end fight button - still need to put the destroy parts - will connect it with the spell functions later on to determine if fight ends
-    def end_fight():
+    def end_fight():    #triggers fight experience and then sends to loading page once the fight has ended, lvl calculations will be completed in the loading page
         global fightstatus
         global difficulty_choice
         global timer
-        global physical_defence
-        global magical_defence
-        global basedmg
-        global hp
         global currentexp
         global currentlvl
-        global pastlvl
         global currentexp
         nonlocal fighthp
-
+        nonlocal mhp
         
         if fighthp != 0:
             fighthp = 0
@@ -1694,20 +1704,15 @@ def fightscreen():
 
         if mhp != 0:
             mhp = 0
-        if mhp <= 0:
+        if mhp <= 0: #updates current exp gained from fight
             currentexp = currentexp + (baseexpgained*difficulty_multiplier)
 
         fightstatus = "Fight Ended"
         difficulty_choice = None
         timer = None #resets the timer to 0 for next fight - its just in case
-
-        #destroy everything - will add these at the end as everything isnt set in stone
-        
         loadingpage() 
 
-    #-----------------------------------monster stats def-----------------------------------------------
-    #for the stats button - 
-    def monsterStatsWindow():
+    def monsterStatsWindow():    #for the monster stats button - 
         global monstername
         nonlocal mhp
         nonlocal mmp
@@ -1778,21 +1783,19 @@ def fightscreen():
         nonlocal timerExists
         nonlocal pressedEndTurn
 
-        if pressedEndTurn == True: #this is to properly destroy countdown timer if player presses end turn button instead of waiting for the timer to run out - if this is true then the timer will be destroyed and a new one will be created
-            timer_lab.destroy() #destroys the timer label when it reaches 0
-            timerExists = False
-            pressedEndTurn = False
-
         #timer label - fight will have a timer of 60 seconds, can increase if they play fast, timer will start automatically - the number will be changed in the loop
             #the if is for checking if the label already exists so it doesnt create duplicates
-        if timerExists == True:
-            pass
-        else:
+        if timerExists == False:
             timerlab_text = tk.StringVar()
             timerlab_text.set(f"{timer}")
 
             timer_lab= tk.Label(window, textvariable=f"{timerlab_text}", font = ("Ariel", 24, "bold"), fg="black", bg="purple")
-            timer_lab.place(relx=0.5, rely=0.1, anchor="center")
+            timer_lab.place(relx=0.5, rely=0.1, relwidth=0.1, relheight=0.1, anchor="center")
+
+        if pressedEndTurn == True: #this is to properly destroy countdown timer if player presses end turn button instead of waiting for the timer to run out - if this is true then the timer will be destroyed and a new one will be created
+            timer_lab.destroy() #destroys the timer label when it reaches 0
+            timerExists = False
+            pressedEndTurn = False # this resets the end turn codition for the next turn
 
         #this is here for end fight procedures - need to destroy timer label
         if fighthp <= 0 or mhp <= 0:
@@ -1801,7 +1804,7 @@ def fightscreen():
                 timerExists = False
             end_fight() #makes it complete end fight procedures.
                 
-        if timer > 0:
+        if timer >= 0:
             timer -= 1
             window.after(1000, countdown) #this repeats the countdown function every 1 second so can make it count down
 
@@ -1852,21 +1855,13 @@ def fightscreen():
         nonlocal pressedEndTurn
         nonlocal fightHpandMpset # this is set because when anyone dies dont want the hp to reset
 
-        if pressedEndTurn == False: #this is to properly destroy countdown timer if player calls end turn command
-            pass
-        else: 
-            countdown() #
-
         time.sleep(1.5) #makes it wait a second before switching turns
 
-                #function that calculates new timer and destroys timer label - timer wont start counting down till its your turn
-        if timer != 0:
-            leftovertimer = timer
-            timer = leftovertimer + 30
-            countdown()
-
-        elif timer == 0:
-            timer = 30
+        if pressedEndTurn == True: #this is to properly destroy countdown timer if player calls end turn command
+            if timer > 0:
+                leftovertimer = timer
+                timer = leftovertimer + 30
+            countdown() #
 
         #thi changes the turn icon from character img to monster img so you know its tthe monsters turn.
         if monstername == "Hierophant":
@@ -1926,18 +1921,23 @@ def fightscreen():
         #-----------------end of turn stuff--------------------
 
             #basically sends it to after fight calculations or next turn - checks to see if someone died
-        if fighthp <= 0 or mhp <= 0:
-            fightHpandMpset == True # this is set because need this so that the current hp of the monster and fighter dont change when i send it back to fight screen
-            fightscreen()
-        else:
+        hpVariablesCheck
+        try:
             time.sleep(1.5) #makes wait before switch turns
+
+            if timer <= 0: #this will reset timer if the player didnt end turn
+                timer = 30
 
             #end of turn mp recovery
             fightmp += 1
             mmp +=1
                 
-            turn += 1 # updates turn label by 1            
+            turn += 1 # updates turn label by 1
+            turnlab_text.set(f"Turn: {turn}")        
+            
             character_turn()
+        except Exception as e:
+            print(e)
 
     def character_turn():
         nonlocal turn 
@@ -1946,13 +1946,12 @@ def fightscreen():
         nonlocal fightHpandMpset # this is set because when anyone dies dont want the hp to reset
 
         timerExists = False #used to check if the timer exists or not - if it does then it will be destroyed and a new one will be created
-        fighthp -= 1 #this is here for radiation, at start of turn player loses 1 hp - will add a check if it kills user             
-           
-            #if is here to check if radiation would end the fight
-        if fighthp <= 0 or mhp <= 0:
-            fightHpandMpset == True # this is set because need this so that the current hp of the monster and fighter dont change when i send it back to fight screen
-            fightscreen()
-
+        fighthp -= 1 #this is here for radiation, at start of turn player loses 1 hp - will add a check if it kills user  
+        hpVariablesCheck()#updates hp - check if radiation would end the fight           
+        window.update()
+        
+        hpVariablesCheck()#updates hp and checks if anything died
+    
         countdown() #starts the countdown timer for the turn
 
             #updates the character turn icon but not for turn 1
@@ -2014,28 +2013,24 @@ def fightscreen():
                 elif mhp == 0:
                     return      
 
-        #if is here to check if anything happend that would end the fight like a spell
-        if fighthp <= 0 or mhp <= 0:
-            fightHpandMpset == True # this is set because need this so that the current hp of the monster and fighter dont change when i send it back to fight screen
-
-            fightscreen()
+        hpVariablesCheck #hp checj
 
    #--------------------------------general buttons----------------------------
-    #end turn button 
+    #in a try so buttons wont be duplicated
     try:
         endturn_but = tk.Button(window, text="End Turn", bg="#00A8FF", font=("Ariel", 16, "bold"), command=end_turn, bd=2, width=10, height=2)
-        endturn_but.place(relx=0.7, rely=0.86, anchor="center")
+        endturn_but.place(relx=0.73, rely=0.95, relheight=0.07, relwidth=0.08, anchor="center")
 
         #end fight 
         endfight_but = tk.Button(window, text="End Fight", bg="#00A8FF", font=("Ariel", 16, "bold"), command=end_fight, bd=2, width=10, height=2)
-        endfight_but.place(relx=0.2, rely=0.86, anchor="center")
+        endfight_but.place(relx=0.32, rely=0.95, relheight=0.07, relwidth=0.08, anchor="center")
 
         #check monter stats 
-        monsterstats_but = tk.Button(window, text="Monster Stats", bg="#00A8FF", font=("Ariel", 16, "bold"), command=monsterStatsWindow, bd=2, width=10, height=2)
-        monsterstats_but.place(relx=0.23, rely=0.86, anchor="center")
+        monsterstats_but = tk.Button(window, text="Monster Stats", bg="#00A8FF", font=("Ariel", 16, "bold"), command=monsterStatsWindow, bd=2, width=11, height=2)
+        monsterstats_but.place(relx=0.8, rely=0.86, anchor="center")
 
-    except:
-        print("Already made")
+    except Exception as e:
+        print("Already made buttons or ", e)
 
     #THIS is the main key for ending the fight - if either the monster or player hp is 0 then it will destroy everything and go to end fight def
     if fighthp <= 0 or mhp <= 0:
@@ -2053,8 +2048,10 @@ def fightscreen():
             hp_lab.destroy()
             turn_lab.destroy()
             fightHpandMpset == False # this is set because need this so that the current hp of the monster and fighter dont change when i send it back to fight screen
+            end_fight()
 
-        except:
+        except Exception as e:
+            print(e)
             pass
 
         countdown() #this is here so that if the fight ends it will destroy the timer label and reset the timer to 0 for next fight and then it will go to end fght def in there.
