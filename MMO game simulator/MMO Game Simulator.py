@@ -11,7 +11,7 @@ import random
 3. noticed that when you load it up it doesnt sit in the center so would need to move it abit
 4. add more tips to help play the game
 5. add music
-6 clean up code proccess, move my global code to below, move my configures to the bottoms
+6 clean up code proccess, move my global code to below, move my configures to the bottoms, make some of my repeatable code functions.
 7.    # if want to make gear would have to put 1 which monster drops what gear, how would character equip them, and an array that holds the information of the gears - could make the database work into this too. will use the dropdown to do determine that gear drop rates
     want to somehow encrypt my code so that people cant see it
     later on if decide to save information can just save the information from the variables and also include a portion where it updates the database in loading page - when i login can make an if and will take the stats saved in the database and make the variables = to that
@@ -24,21 +24,17 @@ import random
 14. explain dmg calculations in stat page
 15. edit code to include a tutorial
 
-    #need to fix monster stats window, last text needs to be wrapped
-    #want to move monster stats near end of fight button and edit it abit
-    #need to make an if for if press end fight while hp above 0 then it will count as your lost
     #next will work on the spell buttons
-
 
     #after that going to go ahead and do the monster attack and animations, character stuff will be copying and pasting from ehre and will be much more work
     #  next making spell array
-    #need to check loading page make sure leaving fightingpage works properly
     need to make it where when turn ends it deactivates all buttons, also in the if not turn 1, can also reactivate all buttons - after that can make another if cooldown != 0 deactivates again
 
     make command for spell button - dont need to add too much in here, could just check spell name and what character
-    
+    #will do this after completing spells - need to edit end turn button so that its deactivated when its not the players turn, and activated when it is the players turn ()
+   
+     #need to check after the fight ends that everything is activating properly
 
-16. need to edit end turn button so that its deactivated when its not the players turn, and activated when it is the players turn
 17. need to include more tips - 
     - for each spell a monster cast after a certain ammount of attacks they will gain dmg due to radiation
     - you will lose 1 hp every turn due to radiation, so make sure to finish the fight quickly
@@ -235,7 +231,8 @@ healerspells = [
     }
 ]
 
-fightstatus = None #will be updated to empty(no fight is happening), fight started, or fight ended
+fightstatus = None #will be updated to empty(no fight is happening), fight started, or fight ended - this is to tell if a fight is happening or not
+fightWon = False #this is to tell if fight was won or not, seperate from fight status
 
 #-----------------------------------main window----------------------------------
 #Create Window
@@ -1341,6 +1338,8 @@ def mainscreen():
     if lvlupnotification == "You Have Leveled Up!":
             # The Pop-up box code
         messagebox.showinfo(f"{lvlupnotification}\n Your current level is LV.{currentlvl}!")
+    elif fightWon == False:
+        messagebox.showinfo(f"You have lost\n Your current level is LV.{currentlvl}!")
 
     def startfight():
         global fightstatus
@@ -1391,7 +1390,9 @@ def fightscreen():
 
     difficulty_choice = difficulty.get()
 
+    timer = 60 #reassigning because without on 2nd fight will be messed up
     timerExists = False #used to check if the timer exists or not - if it does then it will be destroyed and a new one will be created
+    oneSecondCountdown = None #used for the timer variable in countdown
     pressedEndTurn = False # this is to properly destroy countdown timer if player presses end turn button instead of waiting for the timer to run out - if this is true then the timer will be destroyed and a new one will be created
 
         #used for calculations in fight to exit loop and also display variables - used so they dont change the innitial variables
@@ -1677,7 +1678,7 @@ def fightscreen():
 
         window.update()
     
-    def end_fight():    #triggers fight experience and then sends to loading page once the fight has ended, lvl calculations will be completed in the loading page
+    def end_fight():    #triggers fight experience and then sends to loading page once the fight has ended, lvl calculations will be completed in the loading page, this does decide if won the fight or not and debuffs/exp from the fight
         global fightstatus
         global difficulty_choice
         global timer
@@ -1686,10 +1687,10 @@ def fightscreen():
         global currentexp
         nonlocal fighthp
         nonlocal mhp
-        
-        if fighthp != 0:
-            fighthp = 0
+        global fightWon
 
+        #-------------exp calculations ------------- 
+        def lvl_exp_decrease():
             #lvl and exp decrease
             currentlvl - 1
             pastlvl - 1
@@ -1700,16 +1701,22 @@ def fightscreen():
             hp/1.5
             magical_defence/1.5
             physical_defence/1.5
-            basedmg/1.5
+            basedmg/1.5     
 
-        if mhp != 0:
-            mhp = 0
-        if mhp <= 0: #updates current exp gained from fight
+        if fighthp > 0 and mhp <= 0:
+            fightWon = True
             currentexp = currentexp + (baseexpgained*difficulty_multiplier)
+
+        elif mhp > 0 and fighthp <= 0:
+            fightWon = False
+            lvl_exp_decrease
+
+        elif fighthp <= 0 and mhp <=0:
+            fightWon = False #technically a draw  but its not a win so false - later on could rework mechanics so that they could get like half of what they would have gained
+            lvl_exp_decrease
 
         fightstatus = "Fight Ended"
         difficulty_choice = None
-        timer = None #resets the timer to 0 for next fight - its just in case
         loadingpage() 
 
     def monsterStatsWindow():    #for the monster stats button - 
@@ -1771,9 +1778,8 @@ def fightscreen():
         mmagical_defence_label.grid(row=5, column=0, padx=5, pady=5)
 
                 #mmagical defence label
-        monster_dmg_infolabel = tk.Label(stats_panel, text="*Total damage is calculated using Magical and Physical Damage instead of Base Damage", fg="white", bg="black", font=("Courier", 14, "bold"))
+        monster_dmg_infolabel = tk.Label(stats_panel, text="*Total damage is calculated using Magical and Physical Damage instead of Base Damage", fg="white", bg="black", font=("Courier", 14, "bold"),  wraplength=400)
         monster_dmg_infolabel.grid(row=6, column=0, padx=10, pady=10)
-
         #Run window
         window.mainloop()
 
@@ -1782,13 +1788,13 @@ def fightscreen():
         global timer
         nonlocal timerExists
         nonlocal pressedEndTurn
+        nonlocal oneSecondCountdown
 
         #timer label - fight will have a timer of 60 seconds, can increase if they play fast, timer will start automatically - the number will be changed in the loop
             #the if is for checking if the label already exists so it doesnt create duplicates
         if timerExists == False:
             timerlab_text = tk.StringVar()
             timerlab_text.set(f"{timer}")
-
             timer_lab= tk.Label(window, textvariable=f"{timerlab_text}", font = ("Ariel", 24, "bold"), fg="black", bg="purple")
             timer_lab.place(relx=0.5, rely=0.1, relwidth=0.1, relheight=0.1, anchor="center")
 
@@ -1803,10 +1809,11 @@ def fightscreen():
                 timer_lab.destroy() #destroys the timer label when it reaches 0
                 timerExists = False
             end_fight() #makes it complete end fight procedures.
-                
+
+        #this is here because if press end turn too fast it can cause the .after to repeat making countdown trigger multiple times   + also found making coutndown restart to lower timer count     
         if timer >= 0:
             timer -= 1
-            window.after(1000, countdown) #this repeats the countdown function every 1 second so can make it count down
+            oneSecondCountdown = window.after(1000, countdown) #this repeats the countdown function every 1 second so can make it count down
 
         else: 
             timer_lab.destroy() #destroys the timer label when it reaches 0
@@ -1854,6 +1861,7 @@ def fightscreen():
         nonlocal mhp
         nonlocal pressedEndTurn
         nonlocal fightHpandMpset # this is set because when anyone dies dont want the hp to reset
+        nonlocal oneSecondCountdown
 
         time.sleep(1.5) #makes it wait a second before switching turns
 
@@ -1861,7 +1869,18 @@ def fightscreen():
             if timer > 0:
                 leftovertimer = timer
                 timer = leftovertimer + 30
+                if timer > 90:
+                    timer = 90 #this caps the timer at 90 seconds
+
             countdown() #
+
+        if oneSecondCountdown is not None and oneSecondCountdown in window.tk.call('after', 'info'):
+            try:
+               for after_id in window.tk.call('after', 'info'):
+                window.after_cancel(after_id)
+            except Exception as e:
+                print ("There are no countdowns, or", e)
+
 
         #thi changes the turn icon from character img to monster img so you know its tthe monsters turn.
         if monstername == "Hierophant":
@@ -1944,6 +1963,7 @@ def fightscreen():
         nonlocal timerExists
         nonlocal fighthp
         nonlocal fightHpandMpset # this is set because when anyone dies dont want the hp to reset
+        nonlocal oneSecondCountdown
 
         timerExists = False #used to check if the timer exists or not - if it does then it will be destroyed and a new one will be created
         fighthp -= 1 #this is here for radiation, at start of turn player loses 1 hp - will add a check if it kills user  
@@ -1951,7 +1971,7 @@ def fightscreen():
         window.update()
         
         hpVariablesCheck()#updates hp and checks if anything died
-    
+
         countdown() #starts the countdown timer for the turn
 
             #updates the character turn icon but not for turn 1
@@ -2027,7 +2047,7 @@ def fightscreen():
 
         #check monter stats 
         monsterstats_but = tk.Button(window, text="Monster Stats", bg="#00A8FF", font=("Ariel", 16, "bold"), command=monsterStatsWindow, bd=2, width=11, height=2)
-        monsterstats_but.place(relx=0.8, rely=0.86, anchor="center")
+        monsterstats_but.place(relx=0.22, rely=0.95, relheight=0.07, relwidth=0.09, anchor="center")
 
     except Exception as e:
         print("Already made buttons or ", e)
