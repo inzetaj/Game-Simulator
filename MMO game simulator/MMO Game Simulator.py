@@ -9,7 +9,7 @@ import random
 1. loading page-  want to make the labels in here a bit bigger so no1 strains to see
 2. perhaps make a label in the beginning telling the password and user - will edit it so they can make a new password first and it will be saved inside the variable - will make a button for it - later on if get a databse can take the value from the variable
 3. noticed that when you load it up it doesnt sit in the center so would need to move it abit
-4. add more tips to help play the game
+4. tutorial - maybe can use the label i created
 5. add music
 6 clean up code proccess, move my global code to below, move my configures to the bottoms, make some of my repeatable code functions.
 7.    # if want to make gear would have to put 1 which monster drops what gear, how would character equip them, and an array that holds the information of the gears - could make the database work into this too. will use the dropdown to do determine that gear drop rates
@@ -25,12 +25,16 @@ import random
 15. edit code to include a tutorial
 
     #next will work on the spell buttons
+    #want to make a action afterwards where if hover will do a mini pop up or something with spell info 
+    #found a bug where if press end turn too fast the game will freeze for a ec then the timer will go up drammatically past 90 and turn will go up by 1 every second
+        #also if press end turn when u have 1 hp will cause a bug that will make you keep going from fight screen to main screen back n forth. - to fix this should put an hp check in end turn so monster turn will never start
+
+    going to make a variable to determine if monster turn or character turn - think this will be used for deactivating buttons and much more - if cant figure it out can include an if for where if not your turn will get a popup and nothing else happens
 
     #after that going to go ahead and do the monster attack and animations, character stuff will be copying and pasting from ehre and will be much more work
     #  next making spell array
     need to make it where when turn ends it deactivates all buttons, also in the if not turn 1, can also reactivate all buttons - after that can make another if cooldown != 0 deactivates again
 
-    make command for spell button - dont need to add too much in here, could just check spell name and what character
     #will do this after completing spells - need to edit end turn button so that its deactivated when its not the players turn, and activated when it is the players turn ()
    
      #need to check after the fight ends that everything is activating properly
@@ -39,19 +43,7 @@ import random
     - for each spell a monster cast after a certain ammount of attacks they will gain dmg due to radiation
     - you will lose 1 hp every turn due to radiation, so make sure to finish the fight quickly
 
-    #spells button
-    for spells gonna make an array 
-    gonna make a panel to hold the buttons
-        gonna make an if "class" then generates these type of buttons spells, will have elif for onther two classes, and add to panel
-            gonna make the button loop for the amount of spells inside the if -
-                inide the button loop gonna make a command - spell button - row always 0, columns increase by 1 each loop
-                    spell button is gonna be a def and inside thats is more ifs that checks the name of the button, if button name = this it does this
-                        will have it make a temporary label that shows the spell animations in between the two characters
-                        will make it show an animation on the label with pictures and a time sleep 0.1 and have it move across the label -might ue ai for this part as a lot of work
-                        then will calculate the spell dmg 
-
-what i need to do next is fix labels not showing hp correctly after turn starts (think need to do a window update) and position of buttons and the size of buttons
-timer also freezes when i press end of turn - i think somehow the timer label isn't getting destroyed properly which results in that because got error saying cant acces timer_lab.destroy() because not associated with a value
+18. want to make the graphics more better, i might include giphs and maybe a video like wakfu that introduces the game - and for fighting when you click spell fasts the animations dont glitch and instead they are just done way faster. 
 """                     
 #--------------------------------------------Global----------------------
 password = "password"
@@ -233,11 +225,12 @@ healerspells = [
 
 fightstatus = None #will be updated to empty(no fight is happening), fight started, or fight ended - this is to tell if a fight is happening or not
 fightWon = False #this is to tell if fight was won or not, seperate from fight status
+numOfFights = 0 #just a personal status later on for people who will want to know how many fights they did.
 
 #-----------------------------------main window----------------------------------
 #Create Window
 window = tk.Tk()
-window.title("MMO Game Simulator")
+window.title("Game Simulator")
 window.geometry ("1408x768")
 window.configure(bg="black")
 window.resizable(False, False)
@@ -970,13 +963,12 @@ def characterscreen():
             classimgs_lab.image = m_healerimg
 
         window.update()
-
-         
+     
     # Choose Class Buttons 
     # --- WARRIOR BUTTON ---
     warrior_btn = tk.Button(
         left_panel, image=warrior_icon, # Replace with your actual warrior image variable
-        text="Warrior", compound="top", width=37, height=50, command=selected_warrior  # Links instantly on click!
+        text="Warrior", compound="top", width=37, height=50, command=selected_warrior  
     )
     warrior_btn.grid(row=0, column=0, padx=5, pady=5)
     warrior_btn.image = warrior_icon # Keeps image from turning white
@@ -984,7 +976,7 @@ def characterscreen():
     # --- MAGE BUTTON ---
     mage_btn = tk.Button(
         left_panel, image=mage_icon,        # Replace with your actual mage image variable
-        text="Mage", compound="top", width=37, height=50, command=selected_mage    # Links instantly on click!
+        text="Mage", compound="top", width=37, height=50, command=selected_mage   
     )
     mage_btn.grid(row=0, column=1, padx=5, pady=5)
     mage_btn.image = mage_icon
@@ -997,7 +989,7 @@ def characterscreen():
         compound="top", 
         width=37, 
         height=50,
-        command=selected_healer  # Links instantly on click!
+        command=selected_healer  
     )
     healer_btn.grid(row=1, column=0, padx=5, pady=5)
     healer_btn.image = healer_icon
@@ -1008,6 +1000,7 @@ def mainscreen():
     global character_selected
     global gender
     global difficulty
+    global numOfFights
 
           #replace background img 
     mainscreenimg = tk.PhotoImage(file="mainscreen.png")
@@ -1165,7 +1158,7 @@ def mainscreen():
         spells_panel = tk.Frame(spellswindow, bg="white")
         spells_panel.place(relx=0.5, rely=0.55, anchor="center")
 
-            #---------create spell labels-------
+            #---------create spell labels-------    - need to change variable names
 
         if character_selected == "Warrior":
 
@@ -1338,7 +1331,7 @@ def mainscreen():
     if lvlupnotification == "You Have Leveled Up!":
             # The Pop-up box code
         messagebox.showinfo(f"{lvlupnotification}\n Your current level is LV.{currentlvl}!")
-    elif fightWon == False:
+    elif fightWon == False and numOfFights > 0:
         messagebox.showinfo(f"You have lost\n Your current level is LV.{currentlvl}!")
 
     def startfight():
@@ -1688,6 +1681,7 @@ def fightscreen():
         nonlocal fighthp
         nonlocal mhp
         global fightWon
+        global numOfFights
 
         #-------------exp calculations ------------- 
         def lvl_exp_decrease():
@@ -1715,6 +1709,7 @@ def fightscreen():
             fightWon = False #technically a draw  but its not a win so false - later on could rework mechanics so that they could get like half of what they would have gained
             lvl_exp_decrease
 
+        numOfFights += 1
         fightstatus = "Fight Ended"
         difficulty_choice = None
         loadingpage() 
@@ -1822,25 +1817,90 @@ def fightscreen():
         
         window.update()
 
-    """DO THIS AFTER YOU MADE BUTTONS SO CAN USE BUTTON NAMES
-    if character_selected == "Warrior":
-        def spellactivation():
-            global warriorspells
-            if spellname = #start checking which was clicked button name was clicked 
-        #do spell functions written below
+    #-----------create spell methods and spell buttons & label/panel----------------
+    #create button pannel - should be made above the def above
 
-            if 
+    spells_panel = tk.Frame(window, bg="purple", bd=2, width=20, height=2)
+    spells_panel.place(relx=0.425, rely=0.8, anchor="Center")  
 
-    elif character_selected == "Mage":
+    spellinfo_lab = tk.Label(window, text="", font=("Ariel", 12), fg="black", bg="purple")
+    spellinfo_lab.place(relx=0.5, rely=0.78, anchor="center")
 
-    elif character_selected == "Healer":"""
+    def spellactivation(spell):
+        global warriorspells, magespells, healerspells
+        global character_selected
 
+        if character_selected == "Warrior":
+            if spell["Name"] == 
+            elif spell["Name"] == 
+            elif spell["Name"] == 
+            elif spell["Name"] == 
+
+            window.update()
+
+        elif character_selected == "Mage":
+            if spell["Name"] == 
+            elif spell["Name"] == 
+            elif spell["Name"] == 
+            elif spell["Name"] == 
+
+            window.update()
+
+        elif character_selected == "Healer":
+            if spell["Name"] == 
+            elif spell["Name"] == 
+            elif spell["Name"] == 
+            elif spell["Name"] == 
+
+            window.update()
+    
+
+        """
+                        will have it make a temporary label that shows the spell animations in between the two characters
+                        will make it show an animation on the label with pictures and a time sleep 0.1 and have it move across the label -might ue ai for this part as a lot of work - think might just go ahead and use giphs
+                        then will calculate the spell dmg """
+
+    def show_spell_info(spell): #shows spell info in label when hovered over.
+        spellinfo_lab.config(text=f"\t\t{spell["Name"]} \n MP Cost: {spell["Mp Cost"]} \nDamage: {spell["Damage"]} \nDescription {spell["Description"]}", font=("Courier", 12, "bold"), wraplength=500, justify="left", anchor="w")
+         
+    def hide_spell_info(event=None): #hides spell info in label.
+        spellinfo_lab.config(text="")
     """
-        if click spell do spell function - inside spell will be a while loop for animations so dont need to worry about time
-        
+        gonna make spell buttons first, then afterwards will worry about deactivating all the spells
+
         #might need to add new variable called cooldown for spell functions, if cooldown != 0 then will automatically deactivate the button at the start of the def- might make a small label that pops up for buttons with cooldowns, will just display "0/1/2"
         #need to include the end fight fucntion here
+
     """
+
+    spell_buttons = []
+    #need to go back to the array above and include spell pictures and call it spell["Spell Icon"]
+    if character_selected == "Warrior":       
+        for i, spell in enumerate(warriorspells):
+            btn = tk.Button(spells_panel, image =spell["Spell Icon"], text=spell["name"], width=14, height=2,
+                            command=lambda s=spell: spellactivation(s))        # click - s=spell is basically saving data in the index of each button - when the button is created each button will have its own lambda so s wont be overwritten - lambda is a function without any code under it, whatever u write next to it ='s its function - the : in s=spell: is basically assigning that variable to whatever comes after: because how in def they cant know information outside of defs, its the same thing. this calls the variable so can also do for ex: spell: spell *2
+            btn.bind("<Enter>", lambda e, s=spell: show_spell_info(s))          # mouse over
+            btn.bind("<Leave>", hide_spell_info)                                # mouse away
+            btn.grid(row=0, column=0 + i, padx=5, pady=5)
+            spell_buttons.append(btn)
+
+    elif character_selected == "Mage":
+        for i, spell in enumerate(magespells):
+            btn = tk.Button(spells_panel, image =spell["Spell Icon"], text=spell["name"], width=14, height=2,
+                            command=lambda s=spell: spellactivation(s))        # click - s=spell is basically saving data in the index of each button - when the button is created each button will have its own lambda so s wont be overwritten - lambda is a function without any code under it, whatever u write next to it ='s its function - the : in s=spell: is basically assigning that variable to whatever comes after: because how in def they cant know information outside of defs, its the same thing. this calls the variable so can also do for ex: spell: spell *2
+            btn.bind("<Enter>", lambda e, s=spell: show_spell_info(s))          # mouse over
+            btn.bind("<Leave>", hide_spell_info)                                # mouse away
+            btn.grid(row=0, column=0 + i, padx=5, pady=5)
+            spell_buttons.append(btn)
+
+    elif character_selected == "Healer":
+        for i, spell in enumerate(healerspells):
+            btn = tk.Button(spells_panel, image =spell["Spell Icon"], text=spell["name"], width=14, height=2,
+                            command=lambda s=spell: spellactivation(s))        # click - s=spell is basically saving data in the index of each button - when the button is created each button will have its own lambda so s wont be overwritten - lambda is a function without any code under it, whatever u write next to it ='s its function - the : in s=spell: is basically assigning that variable to whatever comes after: because how in def they cant know information outside of defs, its the same thing. this calls the variable so can also do for ex: spell: spell *2
+            btn.bind("<Enter>", lambda e, s=spell: show_spell_info(s))          # mouse over
+            btn.bind("<Leave>", hide_spell_info)                                # mouse away
+            btn.grid(row=0, column=0 + i, padx=5, pady=5)
+            spell_buttons.append(btn)
 
     #---------------------------------------------turn defs---------------------------------------------------------------------------
     #gonna remove the loop and just make a new function the will be called when need to check if hp < 0. it already switches turns between each other
@@ -2047,7 +2107,7 @@ def fightscreen():
 
         #check monter stats 
         monsterstats_but = tk.Button(window, text="Monster Stats", bg="#00A8FF", font=("Ariel", 16, "bold"), command=monsterStatsWindow, bd=2, width=11, height=2)
-        monsterstats_but.place(relx=0.22, rely=0.95, relheight=0.07, relwidth=0.09, anchor="center")
+        monsterstats_but.place(relx=0.24, rely=0.95, relheight=0.07, relwidth=0.11, anchor="center")
 
     except Exception as e:
         print("Already made buttons or ", e)
@@ -2067,6 +2127,12 @@ def fightscreen():
             name_lab.destroy() 
             hp_lab.destroy()
             turn_lab.destroy()
+            spellinfo_lab.destroy()
+            spells_panel.destroy()
+            for b in spell_buttons:
+                b.destroy()
+                spell_buttons.clear()                  # empties the list so it doesn't hold dead buttons
+
             fightHpandMpset == False # this is set because need this so that the current hp of the monster and fighter dont change when i send it back to fight screen
             end_fight()
 
@@ -2077,9 +2143,6 @@ def fightscreen():
         countdown() #this is here so that if the fight ends it will destroy the timer label and reset the timer to 0 for next fight and then it will go to end fght def in there.
     else:
         character_turn() #this is what actually starts the fight - its here because when the fight needs to end gonna send it back to fighting screen so i can properly destroy everything.
-        
-       #-----------create spell methods and spell buttons----------------
-        #think will move this inside of character turn and have it deleted at end so people can click buttons or deactivate buttons if def = monster turn
                       
 #Run window
 window.mainloop()
