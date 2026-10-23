@@ -19,20 +19,21 @@ import random
 9. will need to replace class imgs - doesnt match with monsters
 10. create a logout button
 11.   in fight page  #need to make a message box or something that holds the information of the fight - can be small covering 4 commands
-12.   will create like same makeshift animations, when click spell like a panel being made and it shows dmg/heals/barriers then disappears after 3 seconds - would like it to fade out but no clue yet - for now will get things working then will edit this is
 13. make a file to hold all the imges so wont have multiple files all over the place and then redirect everything in the code
 14. explain dmg calculations in stat page
 15. edit code to include a tutorial
 
-    #next will work on the spell buttons
-    #want to make a action afterwards where if hover will do a mini pop up or something with spell info 
+        gonna make spell buttons first, then afterwards will worry about deactivating all the spells
+            i didnt add cooldowns yet but will do it soon - might need to add new variable called cooldown for spell functions, if cooldown != 0 then will automatically deactivate the button at the start of the def- might make a small label that pops up for buttons with cooldowns, will just display "0/1/2"
+    #need to edit stats and monster window to include that physical or magical defence /2 is subtracted by dmg
+    #need to make monster spells
+
     #found a bug where if press end turn too fast the game will freeze for a ec then the timer will go up drammatically past 90 and turn will go up by 1 every second
         #also if press end turn when u have 1 hp will cause a bug that will make you keep going from fight screen to main screen back n forth. - to fix this should put an hp check in end turn so monster turn will never start
 
-    going to make a variable to determine if monster turn or character turn - think this will be used for deactivating buttons and much more - if cant figure it out can include an if for where if not your turn will get a popup and nothing else happens
+    going to make a variable to determine if monster turn or character turn, a boolean- think this will be used for deactivating buttons and much more - if cant figure it out can include an if for where if not your turn will get a popup and nothing else happens
 
     #after that going to go ahead and do the monster attack and animations, character stuff will be copying and pasting from ehre and will be much more work
-    #  next making spell array
     need to make it where when turn ends it deactivates all buttons, also in the if not turn 1, can also reactivate all buttons - after that can make another if cooldown != 0 deactivates again
 
     #will do this after completing spells - need to edit end turn button so that its deactivated when its not the players turn, and activated when it is the players turn ()
@@ -59,10 +60,7 @@ hp = 0
 physical_defence = 0
 magical_defence = 0
 mp = 0
-mpused = 0
-mpdmg = mpused*2 #whenever need to do math with magical dmg only need to assign the value  mpused and add mpdmg 
 basedmg = 3
-totaldmg = mpdmg + basedmg
 
 #for counting exp after battler
 currentexp = 0
@@ -124,6 +122,7 @@ monsters = [
 
     #will create an array for spells below too spells so they can be global
 
+#USED for stat pages and info pages, actual spell dmg and stuff will be inside spell activation def on fight screen
 warriorspells = [
     {
         "Name": "Basic Attack",
@@ -145,7 +144,7 @@ warriorspells = [
     },
     {
         "Name": "Warrior's Sword",
-        "MP Cost": "all",
+        "MP Cost": "100%",
         "Damage": "(MP used * 2 * 1.5) + Base Damage + (lvl * 1.5)",
         "Description": "Uses all your MP to deal a very heavy attack. Gains 3 MP."
     },
@@ -1365,9 +1364,7 @@ def mainscreen():
 def fightscreen():
     global difficulty
     global monstername
-    global magespells
-    global healerspells
-    global warriorspells
+    global magespells, healerspells, warriorspells
     global character_selected
     global currentlvl
     global name
@@ -1380,6 +1377,7 @@ def fightscreen():
     global expneeded
     global fightstatus
     global timer
+    global physical_defence, magical_defence #used when monster is attacking player
 
     difficulty_choice = difficulty.get()
 
@@ -1388,7 +1386,13 @@ def fightscreen():
     oneSecondCountdown = None #used for the timer variable in countdown
     pressedEndTurn = False # this is to properly destroy countdown timer if player presses end turn button instead of waiting for the timer to run out - if this is true then the timer will be destroyed and a new one will be created
 
-        #used for calculations in fight to exit loop and also display variables - used so they dont change the innitial variables
+    # anything added to these debuffs/buffs must follow a form of - EX: "Name": "Damage Debuff", "Turns(how long it lasts- dont include this paraenthesis)": 2, "Effect": "blah blah blah", "Value": 0.40 - the value is only thing used for calculation - anything that only adds values without any turn cooldown should not be added
+    player_buffs = []   
+    player_debuffs = []   
+    monster_buffs = []  
+    monster_debuffs = [] 
+
+    #used for calculations in fight to exit loop and also display variables - used so they dont change the innitial variables - will cause a bug and game may crash because if remove the if makes a infinite loop
     fightHpandMpset = False
     if fightHpandMpset == False:
         fighthp = hp
@@ -1819,91 +1823,286 @@ def fightscreen():
 
     #-----------create spell methods and spell buttons & label/panel----------------
     #create button pannel - should be made above the def above
+    try: 
+        spells_panel = tk.Frame(window, bg="purple", bd=2, width=20, height=2)
+        spells_panel.place(relx=0.425, rely=0.8, anchor="center")  
 
-    spells_panel = tk.Frame(window, bg="purple", bd=2, width=20, height=2)
-    spells_panel.place(relx=0.425, rely=0.8, anchor="Center")  
-
-    spellinfo_lab = tk.Label(window, text="", font=("Ariel", 12), fg="black", bg="purple")
-    spellinfo_lab.place(relx=0.5, rely=0.78, anchor="center")
+        spellinfo_lab = tk.Label(window, text="", font=("Ariel", 12), fg="black", bg="purple")
+        spellinfo_lab.place(relx=0.5, rely=0.78, anchor="center")
+    except Exception as e:
+        print("already made spell info label and panel or ", e)
 
     def spellactivation(spell):
         global warriorspells, magespells, healerspells
         global character_selected
+        global difficulty
+        global character_selected
+        global currentlvl
+        global name
+        global monsters, monstername
+        global basedmg
+        global currentexp
+        global pastlvl
+        global expneeded
+        global fightstatus
+        global timer
+        nonlocal mhp, fighthp, fightmp, mmp, mphysical_defence, mmagical_defence
+        nonlocal player_buffs, player_debuffs, monster_buffs, monster_debuffs
+
+        warriorSpellDmg = [
+            {
+                "Name": "Basic Attack",
+                "Damage": {basedmg},
+                "Description": "Hits the target without any MP to lightly damage the target. Gains 3 MP."
+            },
+            {
+                "Name": "Strike",
+                "Damage": f"{basedmg} + 2 + ({currentlvl} * 1.5)",
+                "Description": "Strikes the target quickly with your sword. Gains 3 MP."
+            },
+            {
+                "Name": "Swordsmanship",
+                "Damage": f"{basedmg} + 6 + ({currentlvl} * 1.5)",
+                "Description": "Uses MP to deal massive damage in a short time. Gains 3 MP."
+            },
+            {
+                "Name": "Warrior's Sword",
+                "Damage": f"({mpused} * 2 * 1.5) + {basedmg} + ({currentlvl} * 1.5)",
+                "Description": "Uses all your MP to deal a very heavy attack. Gains 3 MP."
+            },
+            {
+                "Name": "Advance Shield",
+                "Damage": f"{basedmg} + 4 + ({currentlvl} * 1.5)",
+                "Description": "Hits the target and steals some HP with MP and generates a shield with it to advance next turn with. Gains 3 MP. The shield equals 4 + ({currentlvl} * 1.5) + 10."
+            }
+        ]
+
+        mageSpellDmg = [
+            {
+                "Name": "Staff Attack",
+                "Damage": {basedmg},
+                "Description": "Hits the target without any MP to lightly damage the target. Gains 3 MP."
+            },
+            {
+                "Name": "MP Drain",
+                "Damage": f"9 + ({currentlvl} * 1.5)",
+                "Description": "Drains the target of MP equal to double the MP used. Causes slight damage as the target is being drained. Disables the target for 1 turn due to magic poisoning."
+            },
+            {
+                "Name": "HP Drain",
+                "Damage": f"15 + ({currentlvl} * 1.5)",
+                "Description": "Uses magic to drain the target's HP."
+            },
+            {
+                "Name": "Magic Explosion",
+                "Damage": f"30 + ({currentlvl} * 1.5)",
+                "Description": "Explodes MP onto the target to deal massive damage."
+            },
+            {
+                "Name": "Damage Debuff",
+                "Damage": "0", 
+                "Description": f"Reduces incoming damage by 40% for two turns."
+            }
+        ]
+
+        healerSpellDmg = [
+            {
+                "Name": "Wand Attack",
+                "Damage": {basedmg},
+                "Description": f"Hits the target without any MP to lightly damage the target. Heals 5 + ({currentlvl} * 1.5) HP."
+            },
+            {
+                "Name": "HP Drain",
+                "Damage": f"15 + ({currentlvl} * 1.5)",
+                "Description": "Drains the target's HP to heal itself. Heals 10 HP."
+            },
+            {
+                "Name": "Protective Barrier",
+                "Damage": "0",
+                "Description": f"Casts a strong shield to block enemy attacks. The barrier equals (6 * 2) * ({currentlvl} / 2 + 1)."
+            },
+            {
+                "Name": "Sacrificial Lamb",
+                "Damage": f"Current HP / 2 + 20 + ({currentlvl} * 1.5) + Barrier / 2",
+                "Description": "Sacrifices half of your current HP and all of your MP to deal one high-damage attack. If you have a barrier, it also consumes half of the barrier. Has a 3-turn cooldown starting from the beginning of the fight."
+            },
+            {
+                "Name": "Heal",
+                "MP Cost": 1,
+                "Damage": "0",
+                "Description": f"Heals 8 + ({currentlvl} * 1.5) HP at the cost of dealing no damage. The heal is boosted to help save yourself in times of need and low MP."
+            }
+        ]
+
+        #this is to decide the monster index so we can call monster's physical/magical defence for any monster 
+        if monstername == "Bulmar":
+            monster_index = 1
+    
+        elif monstername == "Goylca":
+            monster_index = 0
+   
+        elif monstername == "Hierophant":
+            monster_index = 3
+    
+        elif monstername == "Krosmo Crusher":
+            monster_index = 2
+
+        mpused = spell["Mp Cost"]
+        mpdmg = mpused*2 #whenever need to do math with magical dmg only need to assign the valueto   mpused and add mpdmg 
+
+        #---------------this decides the base total dmg in the fight, additional adds on to this dmg will change depending on the spell, mostly here so that this part doesnt repeat in all if's---------------
+        if mpused > 0: #checks if the mpused is above 0 for mp dmg
+            #for calculating the dmg loss from monster defence
+            if monsters[monster_index]["magical_defence"] > 0 and monsters[monster_index]["physical_defence"] > 0:
+                pretotaldmg = mpdmg - (monsters[monster_index]["magical_defence"] 
+                                                 + monsters[monster_index]["physical_defence"])/2
+
+            elif monsters[monster_index]["magical_defence"] > 0:
+                pretotaldmg = mpdmg - monsters[monster_index]["magical_defence"]/2
+
+            elif monsters[monster_index]["physical_defence"] > 0:
+                pretotaldmg = mpdmg - monsters[monster_index]["physical_defence"]/2
+
+            else: 
+                pretotaldmg = mpdmg
+
+        elif mpused == 0: #checks if the mpused is = 0 for no mp dmg
+        
+            #for calculating the dmg loss from monster defence
+            if monsters[monster_index]["magical_defence"] > 0 and monsters[monster_index]["physical_defence"] > 0:
+                pretotaldmg = -(monsters[monster_index]["magical_defence"] 
+                                         + monsters[monster_index]["physical_defence"])/2
+
+            elif monsters[monster_index]["magical_defence"] > 0:
+                pretotaldmg = -monsters[monster_index]["magical_defence"]/2
+
+            elif monsters[monster_index]["physical_defence"] > 0:
+                pretotaldmg =  -monsters[monster_index]["physical_defence"]/2
+
+            else: 
+                pretotaldmg =  0
+
+        elif mpused == "100%": #this is for the spells that use all mp
+            mpused = fightmp
+            if monsters[monster_index]["magical_defence"] > 0 and monsters[monster_index]["physical_defence"] > 0:
+                pretotaldmg = mpdmg +  - (monsters[monster_index]["magical_defence"] 
+                                                 + monsters[monster_index]["physical_defence"])/2
+
+            elif monsters[monster_index]["magical_defence"] > 0:
+                pretotaldmg = mpdmg +  - monsters[monster_index]["magical_defence"]/2
+
+            elif monsters[monster_index]["physical_defence"] > 0:
+                pretotaldmg = mpdmg +  - monsters[monster_index]["physical_defence"]/2
+
+            else: 
+                pretotaldmg = mpdmg            
+
+        #--------------------this calculates actual total dmg and will also do animations in the future
+
+        #need to subtract mp used
+        #subtract mhp - totaldmg
+         #will create like same makeshift animation - when click spell a label will be and it shows dmg/heals/barriers then disappears after 3 seconds - would like it to fade out but no clue yet 
+        #animations -         will have it make a temporary label that shows the spell animations in between the two characters and a time sleep 0.1 and have it move across the label -might use ai for this part as a lot of work - think might just go ahead and use giphs
 
         if character_selected == "Warrior":
-            if spell["Name"] == 
-            elif spell["Name"] == 
-            elif spell["Name"] == 
-            elif spell["Name"] == 
+            if spell["Name"] == "Basic Attack":
+                totaldmg = pretotaldmg + warriorSpellDmg[0]["Damage"]
+                monsterHpLoss = mhp - totaldmg 
+                hpVariablesCheck()
+
+            elif spell["Name"] == "Strike":
+                hpVariablesCheck()
+
+
+            elif spell["Name"] == "Swordsmanship":
+                hpVariablesCheck()
+
+            elif spell["Name"] == "Warrior’s Sword":
+                hpVariablesCheck()
+
+            elif spell["Name"] == "Advance Shield":
+                hpVariablesCheck()
 
             window.update()
-
+        
         elif character_selected == "Mage":
-            if spell["Name"] == 
-            elif spell["Name"] == 
-            elif spell["Name"] == 
-            elif spell["Name"] == 
+            if spell["Name"] == "Staff Attack":
+                hpVariablesCheck()
+
+            elif spell["Name"] == "MP Drain":
+                hpVariablesCheck()
+
+            elif spell["Name"] == "HP Drain":
+                hpVariablesCheck()
+
+            elif spell["Name"] == "Magic Explosion":
+                hpVariablesCheck()
+
+            elif spell["Name"] == "Damage Debuff":
+                hpVariablesCheck()
+
 
             window.update()
 
         elif character_selected == "Healer":
-            if spell["Name"] == 
-            elif spell["Name"] == 
-            elif spell["Name"] == 
-            elif spell["Name"] == 
+            if spell["Name"] == "Wand Attack":
+                hpVariablesCheck()
+        
+            elif spell["Name"] == "HP Drain":
+                hpVariablesCheck()
+        
+            elif spell["Name"] == "Protective Barrier":
+                 hpVariablesCheck()
+       
+            elif spell["Name"] == "Sacrificial Lamb":
+                 hpVariablesCheck()
+       
+            elif spell["Name"] == "Heal":
+                hpVariablesCheck()
+
 
             window.update()
     
-
-        """
-                        will have it make a temporary label that shows the spell animations in between the two characters
-                        will make it show an animation on the label with pictures and a time sleep 0.1 and have it move across the label -might ue ai for this part as a lot of work - think might just go ahead and use giphs
-                        then will calculate the spell dmg """
 
     def show_spell_info(spell): #shows spell info in label when hovered over.
         spellinfo_lab.config(text=f"\t\t{spell["Name"]} \n MP Cost: {spell["Mp Cost"]} \nDamage: {spell["Damage"]} \nDescription {spell["Description"]}", font=("Courier", 12, "bold"), wraplength=500, justify="left", anchor="w")
          
     def hide_spell_info(event=None): #hides spell info in label.
         spellinfo_lab.config(text="")
-    """
-        gonna make spell buttons first, then afterwards will worry about deactivating all the spells
-
-        #might need to add new variable called cooldown for spell functions, if cooldown != 0 then will automatically deactivate the button at the start of the def- might make a small label that pops up for buttons with cooldowns, will just display "0/1/2"
-        #need to include the end fight fucntion here
-
-    """
 
     spell_buttons = []
     #need to go back to the array above and include spell pictures and call it spell["Spell Icon"]
-    if character_selected == "Warrior":       
-        for i, spell in enumerate(warriorspells):
-            btn = tk.Button(spells_panel, image =spell["Spell Icon"], text=spell["name"], width=14, height=2,
-                            command=lambda s=spell: spellactivation(s))        # click - s=spell is basically saving data in the index of each button - when the button is created each button will have its own lambda so s wont be overwritten - lambda is a function without any code under it, whatever u write next to it ='s its function - the : in s=spell: is basically assigning that variable to whatever comes after: because how in def they cant know information outside of defs, its the same thing. this calls the variable so can also do for ex: spell: spell *2
-            btn.bind("<Enter>", lambda e, s=spell: show_spell_info(s))          # mouse over
-            btn.bind("<Leave>", hide_spell_info)                                # mouse away
-            btn.grid(row=0, column=0 + i, padx=5, pady=5)
-            spell_buttons.append(btn)
+    try:
+        if character_selected == "Warrior":       
+            for i, spell in enumerate(warriorspells):
+                btn = tk.Button(spells_panel, image =spell["Spell Icon"], text=spell["name"], width=14, height=2,
+                                command=lambda s=spell: spellactivation(s))        # click - s=spell is basically saving data in the index of each button - when the button is created each button will have its own lambda so s wont be overwritten - lambda is a function without any code under it, whatever u write next to it ='s its function - the : in s=spell: is basically assigning that variable to whatever comes after: because how in def they cant know information outside of defs, its the same thing. this calls the variable so can also do for ex: spell: spell *2
+                btn.bind("<Enter>", lambda e, s=spell: show_spell_info(s))          # mouse over
+                btn.bind("<Leave>", hide_spell_info)                                # mouse away
+                btn.grid(row=0, column=0 + i, padx=5, pady=5)
+                spell_buttons.append(btn)
 
-    elif character_selected == "Mage":
-        for i, spell in enumerate(magespells):
-            btn = tk.Button(spells_panel, image =spell["Spell Icon"], text=spell["name"], width=14, height=2,
-                            command=lambda s=spell: spellactivation(s))        # click - s=spell is basically saving data in the index of each button - when the button is created each button will have its own lambda so s wont be overwritten - lambda is a function without any code under it, whatever u write next to it ='s its function - the : in s=spell: is basically assigning that variable to whatever comes after: because how in def they cant know information outside of defs, its the same thing. this calls the variable so can also do for ex: spell: spell *2
-            btn.bind("<Enter>", lambda e, s=spell: show_spell_info(s))          # mouse over
-            btn.bind("<Leave>", hide_spell_info)                                # mouse away
-            btn.grid(row=0, column=0 + i, padx=5, pady=5)
-            spell_buttons.append(btn)
+        elif character_selected == "Mage":
+            for i, spell in enumerate(magespells):
+                btn = tk.Button(spells_panel, image =spell["Spell Icon"], text=spell["name"], width=14, height=2,
+                                command=lambda s=spell: spellactivation(s))        # click - s=spell is basically saving data in the index of each button - when the button is created each button will have its own lambda so s wont be overwritten - lambda is a function without any code under it, whatever u write next to it ='s its function - the : in s=spell: is basically assigning that variable to whatever comes after: because how in def they cant know information outside of defs, its the same thing. this calls the variable so can also do for ex: spell: spell *2
+                btn.bind("<Enter>", lambda e, s=spell: show_spell_info(s))          # mouse over
+                btn.bind("<Leave>", hide_spell_info)                                # mouse away
+                btn.grid(row=0, column=0 + i, padx=5, pady=5)
+                spell_buttons.append(btn)
 
-    elif character_selected == "Healer":
-        for i, spell in enumerate(healerspells):
-            btn = tk.Button(spells_panel, image =spell["Spell Icon"], text=spell["name"], width=14, height=2,
-                            command=lambda s=spell: spellactivation(s))        # click - s=spell is basically saving data in the index of each button - when the button is created each button will have its own lambda so s wont be overwritten - lambda is a function without any code under it, whatever u write next to it ='s its function - the : in s=spell: is basically assigning that variable to whatever comes after: because how in def they cant know information outside of defs, its the same thing. this calls the variable so can also do for ex: spell: spell *2
-            btn.bind("<Enter>", lambda e, s=spell: show_spell_info(s))          # mouse over
-            btn.bind("<Leave>", hide_spell_info)                                # mouse away
-            btn.grid(row=0, column=0 + i, padx=5, pady=5)
-            spell_buttons.append(btn)
+        elif character_selected == "Healer":
+            for i, spell in enumerate(healerspells):
+                btn = tk.Button(spells_panel, image =spell["Spell Icon"], text=spell["name"], width=14, height=2,
+                                command=lambda s=spell: spellactivation(s))        # click - s=spell is basically saving data in the index of each button - when the button is created each button will have its own lambda so s wont be overwritten - lambda is a function without any code under it, whatever u write next to it ='s its function - the : in s=spell: is basically assigning that variable to whatever comes after: because how in def they cant know information outside of defs, its the same thing. this calls the variable so can also do for ex: spell: spell *2
+                btn.bind("<Enter>", lambda e, s=spell: show_spell_info(s))          # mouse over
+                btn.bind("<Leave>", hide_spell_info)                                # mouse away
+                btn.grid(row=0, column=0 + i, padx=5, pady=5)
+                spell_buttons.append(btn)
 
-    #---------------------------------------------turn defs---------------------------------------------------------------------------
-    #gonna remove the loop and just make a new function the will be called when need to check if hp < 0. it already switches turns between each other
+    except Exception as e:
+        print("Spell buttons already exist", e)
+        #---------------------------------------------turn defs---------------------------------------------------------------------------
     
     def end_turn():
         nonlocal pressedEndTurn
@@ -2107,7 +2306,7 @@ def fightscreen():
 
         #check monter stats 
         monsterstats_but = tk.Button(window, text="Monster Stats", bg="#00A8FF", font=("Ariel", 16, "bold"), command=monsterStatsWindow, bd=2, width=11, height=2)
-        monsterstats_but.place(relx=0.24, rely=0.95, relheight=0.07, relwidth=0.11, anchor="center")
+        monsterstats_but.place(relx=0.2, rely=0.95, relheight=0.07, relwidth=0.11, anchor="center")
 
     except Exception as e:
         print("Already made buttons or ", e)
