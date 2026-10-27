@@ -10,6 +10,7 @@ import random
 4. tutorial - maybe can use the label i created
 5. add music
 6 clean up code proccess, move my global code to below, move my configures to the bottoms, make some of my repeatable code functions.
+    might try to make classes as they can remove unnecasarry variables
 7.    # if want to make gear would have to put 1 which monster drops what gear, how would character equip them, and an array that holds the information of the gears - could make the database work into this too. will use the dropdown to do determine that gear drop rates
     want to somehow encrypt my code so that people cant see it
     later on if decide to save information can just save the information from the variables and also include a portion where it updates the database in loading page - when i login can make an if and will take the stats saved in the database and make the variables = to that
@@ -19,41 +20,47 @@ import random
 11.   in fight page  #need to make a message box or something that holds the information of the fight - can be small covering 4 commands
 12. make the game be able to save a game instance associated with a login/pass - would probably make an automatic save in loading page or whatever button you click before switching pages and then another save upon logging out
 13. make a file to hold all the imges so wont have multiple files all over the place and then redirect everything in the code
+14. include the spell bonus descriptions in fightscreen and main screen
 15. edit code to include a tutorial
 
         #Make new button called player stats that will have shield and mp and regular stats from stat window - and delete mp label
         #need to add shield to monster stats window
         #need to make shields update in variable updates - can include the original set in the if at top
-        #want to show mp for character and monster
-        # will add this after i make monster spells - for debuffs/buffs think i might do a for loop and it will go through everything in the index, there will be if's in the loop that will say if name = this do this
-            for -% its always totaldmg * (1 - debuff) #debuff should always be a decimal, ex .40 , thi is effectively 100% - 40%- or you can do totaldmg *= 0.60
-
-        #need to include an if for when when fighthp <MP COst spell doesnt activate #currently will make it not activate and show an error message but later on when im deactivating buttons will make it deactivate the button - or maybe do both just in case
-        
-        gonna make spell buttons first, then afterwards will worry about deactivating all the spells
-            i didnt add cooldowns yet but will do it soon - might need to add new variable called cooldown for spell functions, if cooldown != 0 then will automatically deactivate the button at the start of the def- might make a small label that pops up for buttons with cooldowns, will just display "0/1/2"
-    #need to edit stats and monster window to include that physical or magical defence /2 is subtracted by dmg
-    #need to make monster spells
-
-    #found a bug where if press end turn too fast the game will freeze for a ec then the timer will go up drammatically past 90 and turn will go up by 1 every second
+        #want to show mp for character and monster            
+        #need to edit stats and monster window to include that physical or magical defence /2 is subtracted by dmg
+        #need to make monster spells
+        #found a bug where if press end turn too fast the game will freeze for a ec then the timer will go up drammatically past 90 and turn will go up by 1 every second
         #also if press end turn when u have 1 hp will cause a bug that will make you keep going from fight screen to main screen back n forth. - to fix this should put an hp check in end turn so monster turn will never start
+        
 
-    going to make a variable to determine if monster turn or character turn, a boolean- think this will be used for deactivating buttons and much more - if cant figure it out can include an if for where if not your turn will get a popup and nothing else happens
+        plan for now, get everything to work calculation and logic wise, then im going to go back in and add animations
+            1. finish spell calculations
+            2.Animations - 
+                when come back to do animations for spells make a variable called mpchange for the label) and add it at the start of spell activationa nd it will change depending on the spell - and maybe have to make another variable for spells that take all mp, perhaps called currentmp or expectedmploss
+                will create like same makeshift animation - when click spell a label will be and it shows dmg/heals/barriers then disappears after 3 seconds - would like it to fade out but no clue yet  -would be an if to decide who gets the label then  would be a probably have to make a def that calls ever 1 second for 3 seconds and make a variable that adds 1 each time until reach 3 then when 3 resets
+                will have it make a temporary label that shows the spell animations in between the two characters and a time sleep 0.1 and have it move across the label -might use ai for this part as a lot of work - think might just go ahead and use giphs
+                #if a spell grants bonuses or debuffs will have the effect go after the animations and put a after or something.
+        
+            3. Button deactivation - 
+                thinking of making it a def  and before countdown def and call it in countdown - and what it will basically do is if go ahead and make a variable (not character turn because that can bug, perhaps will be like a boolean - basically it will be a variable to check if its already called or not, can add more conditions in monster def), and if character turn = true then it will call the def to check to deactivate buttons with a .after, and inside the def will be another .after to check it again - make sure to also make a character turn variable so when its monster turn this stops activating - will make an if with that
+                need to include an if for when when fightmp < MP Cost so spell doesnt activate #currently will make it not activate and show an error message but later on when im deactivating buttons will make it deactivate the button - or maybe do both just in case
+                going to make a variable to determine if monster turn or character turn, a boolean- think this will be used for deactivating buttons and much more - if cant figure it out can include an if for where if not your turn will get a popup telling you its not your turn and you cant cast spells (might include this as a backup even if it originally works) and nothing else happens
+                need to make it where when turn ends it deactivates all buttons, also in the if not turn 1, can also reactivate all buttons - after that can make another if cooldown != 0 deactivates again
 
-    #after that going to go ahead and do the monster attack and animations, character stuff will be copying and pasting from ehre and will be much more work
-    need to make it where when turn ends it deactivates all buttons, also in the if not turn 1, can also reactivate all buttons - after that can make another if cooldown != 0 deactivates again
+            4. cooldowns
+                i didnt add cooldowns yet but will do it soon - might need to add new variable called cooldown for spell functions, if cooldown != 0 then will automatically deactivate the button at the start of the def- might make a small label that pops up for buttons with cooldowns, will just display "0/1/2"
 
-    #will do this after completing spells - need to edit end turn button so that its deactivated when its not the players turn, and activated when it is the players turn ()
-   
-     #need to check after the fight ends that everything is activating properly
-
+            5. Monster 
+                #after that going to go ahead and do the monster attack and animations, character stuff will be copying and pasting from ehre and will be much more work
+    
 17. need to include more tips- also want to edit it abit because i think i have extra codes , could just try appending based on class - 
     - for each spell a monster cast after a certain ammount of attacks they will gain dmg due to radiation
     - you will lose 1 hp every turn due to radiation, so make sure to finish the fight quickly
     - monsters uses their own mp to cast spells, monsters cannot cast spells without mp and if they start their turn without mp they will skip
 
 18. want to make the graphics more better, i might include giphs and maybe a video like wakfu that introduces the game - and for fighting when you click spell fasts the animations dont glitch and instead they are just done way faster. 
-19. it might be better to just exlcude the formula in spell dmg and just put the actual spell dmg - who wants to do math? - will probably have to make a spell def so the arrays get redefined too
+19. need to redo spell arrays - might also make a class so can use edit make an object that holds editable data instead of lots of different variables- wanna make another portion called effect so the description isnt holding calculations- it might be better to just exlcude the formula in spell array dmg and just put the actual spell dmg - who wants to do math? - will probably have to make a spell def so the arrays get redefined too - actually rethinking this and might be better just to use variables and since i can update them and only use the array as an initial starting point.
+20. use date time and have it in the fight mini screen that tracks whats happening.
 """                     
 #--------------------------------------------Global----------------------
 password = "password"
@@ -149,7 +156,7 @@ warriorspells = [
     },
     {
         "Name": "Swordsmanship",
-        "MP Cost": 3,
+        "MP Cost": 2,
         "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
         "Description": "Uses MP to deal massive damage in a short time. Gains 3 MP."
     },
@@ -161,9 +168,9 @@ warriorspells = [
     },
     {
         "Name": "Advance Shield",
-        "MP Cost": 2,
+        "MP Cost": 3,
         "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
-        "Description": "Hits the target and steals some HP with MP and generates a shield with it to advance next turn with. Gains 3 MP. The shield equals 4 + (lvl * 1.5) + 10."
+        "Description": "Hits the target to deal damage and steals some HP with MP and generates a shield with it to advance next turn with. Gains 3 MP. The shield is generated at random but will never be less than half of your outputed damage."
     }
 ]
 
@@ -205,13 +212,13 @@ healerspells = [
         "Name": "Wand Attack",
         "MP Cost": 0,
         "Damage": "Base Damage",
-        "Description": "Hits the target without any MP to lightly damage the target. Heals 5 + (lvl * 1.5) HP."
+        "Description": "Hits the target without any MP to lightly damage the target."
     },
     {
         "Name": "HP Drain",
         "MP Cost": 5,
         "Damage": "(MP Used * 3) + (lvl * 1.5)",
-        "Description": "Drains the target's HP to heal itself. Heals 10 HP."
+        "Description": "Drains the target's HP to heal itself."
     },
     {
         "Name": "Protective Barrier",
@@ -229,7 +236,7 @@ healerspells = [
         "Name": "Heal",
         "MP Cost": 1,
         "Damage": "0",
-        "Description": "Heals (MP Used * 3) + (lvl * 1.5) HP at the cost of dealing no damage. The heal is boosted to help save yourself in times of need and low MP."
+        "Description": "Heals (MP Used * 3) + (lvl * 1.5) HP at the cost of dealing no damage."
     }
 ]
 
@@ -561,7 +568,7 @@ def characterscreen():
             healer_btn.image = m_healer_icon 
 
             #set txts because without img shows up with no label if dont click class first
-            info_labtxt.set("The Warrior is a class focused on delivering high physical damage. Unlike the mage class, it doesn't rely all on mp to cast spells. While highly durable, they have no built-in healing abilities. As they do not rely on mp they have little protecting against magical attacks.\n\n Bonuses: Base damage is multiplied by 1.5 \n\n\n\n Difficulty: Low\n\n *Make sure to click a class and type a name before you hit the create character button or you will get an error.")
+            info_labtxt.set("The Warrior is a class focused on delivering high physical damage. Unlike the mage class, it doesn't rely all on mp to cast spells. While highly durable, they have no built-in healing abilities. As they do not rely on mp they have little protecting against magical attacks.\n\n Bonuses: Base damage is multiplied by 1.5 and all spells will use base damage and generate MP but the mp is generated at 2 per spell instead of 3 per spell \n\n\n\n Difficulty: Low\n\n *Make sure to click a class and type a name before you hit the create character button or you will get an error.")
 
          elif character_selected == "Mage":
 
@@ -631,7 +638,7 @@ def characterscreen():
             healer_btn.image = m_healer_icon 
 
             #set txts because without img shows up with no label if dont click class first
-            info_labtxt.set("The Healer is a class focused on self heals and deals low damage for long term fights. It relies on a steady use of mp to cast restorative spells and protective barriers during combat. While they can constantly recover from damage, they possess very low physical and magical damage output but can do a 1 time burst damage with the cost of half their life and all their mp.\n\n Bonuses: Each spell has better  individual bonuses than other classes.\n\n\n Difficulty:  high\n\n *Make sure to click a class and type a name before you hit the create character button or you will get an error.")
+            info_labtxt.set("The Healer is a class focused on self heals and deals low damage for long term fights. It relies on a steady use of mp to cast restorative spells and protective barriers during combat. While they can constantly recover from damage, they possess very low physical and magical damage output but can do a 1 time burst damage with the cost of half their life and all their mp.\n\n Bonuses: Each spell has a healing bonus which is the MP used multiplied by your current lvl * 1.5 and is applied to every spell. \n\n\n Difficulty:  high\n\n *Make sure to click a class and type a name before you hit the create character button or you will get an error.")
 
          else: # updates all button icons but not preview, there are ifs inside of chose a class that will check what the gender is
 
@@ -1404,8 +1411,10 @@ def fightscreen():
         oneSecondCountdown = None #used for the timer variable in countdown
         pressedEndTurn = False # this is to properly destroy countdown timer if player presses end turn button instead of waiting for the timer to run out - if this is true then the timer will be destroyed and a new one will be created
 
-        # anything added to these debuffs/buffs must follow a form of - EX: "State":" "Player Debuff"(this should change depending on if you appending it to whatever array) "Name": "Damage Debuff", "Turns(how long it lasts- dont include this paraenthesis)": 2, "Effect": "blah blah blah", "Value": 0.40 - the value is only thing used for calculation - anything that only adds values without any turn cooldown should not be added
-        #stats are the array name without the s on the end
+        # anything added to these debuffs/buffs must follow a form of - EX: "State":" "Player Debuff", "Name": "Damage Debuff", "Turns(how long it lasts- dont include this paraenthesis)": 2, "Effect": "blah blah blah", "Value": 0.40 - the value is only thing used for calculation - anything that only adds values without any turn cooldown should not be added
+        #states are the array name without the s on the end
+        #states are for the for loop because im putting multiple lists in the loop so need an if statement to differenciate between them.
+        #for -% its always totaldmg * (1 - debuff) #debuff should always be a decimal, ex .40 , thi is effectively 100% - 40%- or you can do totaldmg *= 0.60
         player_buffs = []   
         player_debuffs = []   
         monster_buffs = []  
@@ -1604,7 +1613,6 @@ def fightscreen():
             #this is used for stats window so when i spell is cast that that affects monster mp it changes
             mmp_text = tk.StringVar()
             mmp_text.set(f"{mmp}")
-
 
     #----------------------------basic display labels-----------------------------
     
@@ -1920,16 +1928,21 @@ def fightscreen():
             nonlocal totaldmg, spelldmg
             nonlocal mpdmg
             global monsters
-            nonlocal fightmp
-            global currentlvl, basedmg
+            nonlocal fightmp, fighthp
+            global currentlvl, basedmg, hp
             nonlocal player_buffs, player_debuffs, monster_buffs, monster_debuffs
+            global character_selected
 
             #this is because each spell have either two types of spell damage depending on if they used mp or not
 
             if spell["Name"] == "Basic Attack" or spell["Name"] == "Staff Attack" or spell["Name"] == "Wand Attack":
                 spelldmg = basedmg*1.5
+
+            elif character_selected == "Warrior": #this is because all of warrior spells uses base dmg while others doesn't + 1.5 bonus multiplier
+                spelldmg = (basedmg*1.5)*1.5 + (currentlvl * 1.5)
+
             else:
-                spelldmg = basedmg*1.5 + (currentlvl * 1.5)
+                spelldmg = (currentlvl * 1.5)
 
             if mpused > 0: #checks if the mpused is above 0 for mp dmg
                 #for calculating the dmg loss from monster defence
@@ -1988,416 +2001,316 @@ def fightscreen():
                 else:
                     break
 
-        #--------------------this calculates actual total dmg and will also do animations in the future
-         #will create like same makeshift animation - when click spell a label will be and it shows dmg/heals/barriers then disappears after 3 seconds - would like it to fade out but no clue yet  -would be an if to decide who gets the label then  would be a probably have to make a def that calls ever 1 second for 3 seconds and make a variable that adds 1 each time until reach 3 then when 3 resets
-        #animations -         will have it make a temporary label that shows the spell animations in between the two characters and a time sleep 0.1 and have it move across the label -might use ai for this part as a lot of work - think might just go ahead and use giphs
-                #if a spell grants bonuses or debuffs will have the effect go after the animations and put a after or something.
-        
-        if character_selected == "Warrior":
-            totaldmgcalculations()
-            #holds the spell dmg calculations
+        #this is just to check to see if have enough mp to even use the spell
+        if fightmp < spell["MP Cost"]:
+            messagebox.showerror("Error", "You Do Not Have Enough Mp")
 
-            if spell["Name"] == "Basic Attack":
+        else: 
+
+            #--------------------this calculates actual total dmg and will also do animations in the future
+            if spell["MP Cost"] != "100%":
+                fightmp -= spell["MP Cost"]
+
+            if character_selected == "Warrior":
+                #warrior spell bonus was calculated in totaldmgcalculations()
+                totaldmgcalculations()
                 
-                if monstershield > 0 and totaldmg > monstershield:
-                    totaldmg - monstershield
-                    shieldloss = monstershield #shield lost will be used for animations
-                    monstershield = 0
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-
-                    fightmp += 3 
-
-                elif monstershield > 0 and monstershield > totaldmg:
-                    shieldloss = totaldmg 
-                    monstershield = monstershield - totaldmg
+                #holds the spell dmg calculations
+                if spell["Name"] == "Basic Attack":
                     
-                    fightmp += 3                    
+                    if monstershield > 0 and totaldmg > monstershield:
+                        totaldmg - monstershield
+                        shieldloss = monstershield #shield lost will be used for animations
+                        monstershield = 0
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
 
-                elif monstershield == 0:                    
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-                    fightmp += 3 
+                    elif monstershield > 0 and monstershield > totaldmg:
+                        shieldloss = totaldmg 
+                        monstershield = monstershield - totaldmg
+                        
+                    elif monstershield == 0:                    
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
 
-                variablesUpdate()
+                    fightmp += 2 
 
-            elif spell["Name"] == "Strike":
-                if monstershield > 0 and totaldmg > monstershield:
-                    totaldmg - monstershield
-                    shieldloss = monstershield #shield lost will be used for animations
-                    monstershield = 0
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
+                elif spell["Name"] == "Strike":
+                    if monstershield > 0 and totaldmg > monstershield:
+                        totaldmg - monstershield
+                        shieldloss = monstershield #shield lost will be used for animations
+                        monstershield = 0
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
 
-                    fightmp -= 1
-                    fightmp += 3 
+                    elif monstershield > 0 and monstershield > totaldmg:
+                        shieldloss = totaldmg 
+                        monstershield = monstershield - totaldmg
 
-                elif monstershield > 0 and monstershield > totaldmg:
-                    shieldloss = totaldmg 
-                    monstershield = monstershield - totaldmg
+                    elif monstershield == 0:                    
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
+
+                    fightmp += 2 
                     
-                    fightmp -= 1
-                    fightmp += 3 
+                elif spell["Name"] == "Swordsmanship":
+                    if monstershield > 0 and totaldmg > monstershield:
+                        totaldmg - monstershield
+                        shieldloss = monstershield #shield lost will be used for animations
+                        monstershield = 0
+                        monsterHpLoss = mhp - totaldmg
 
-                elif monstershield == 0:                    
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-                    fightmp -= 1
-                    fightmp += 3 
-                 
-                variablesUpdate()
+                    elif monstershield > 0 and monstershield > totaldmg:
+                        shieldloss = totaldmg 
+                        monstershield = monstershield - totaldmg
 
-            elif spell["Name"] == "Swordsmanship":
-                if monstershield > 0 and totaldmg > monstershield:
-                    totaldmg - monstershield
-                    shieldloss = monstershield #shield lost will be used for animations
-                    monstershield = 0
-                    monsterHpLoss = mhp - totaldmg
+                    elif monstershield == 0:                    
+                        monsterHpLoss = mhp - totaldmg
 
-                    fightmp -=  3
-                    fightmp += 3 
+                    fightmp += 2 
 
-                elif monstershield > 0 and monstershield > totaldmg:
-                    shieldloss = totaldmg 
-                    monstershield = monstershield - totaldmg
-                    
-                    fightmp -=  3
-                    fightmp += 3 
-
-                elif monstershield == 0:                    
-                    monsterHpLoss = mhp - totaldmg
-                    fightmp -=  3
-                    fightmp += 3 
-
-                variablesUpdate()
-
-            elif spell["Name"] == "Warrior’s Sword":
-                if monstershield > 0 and totaldmg > monstershield:
-                    totaldmg - monstershield
-                    shieldloss = monstershield #shield lost will be used for animations
-                    monstershield = 0
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-
+                elif spell["Name"] == "Warrior’s Sword":
                     fightmp = 0
-                    fightmp += 3 
 
-                elif monstershield > 0 and monstershield > totaldmg:
-                    shieldloss = totaldmg 
-                    monstershield = monstershield - totaldmg
+                    if monstershield > 0 and totaldmg > monstershield:
+                        totaldmg - monstershield
+                        shieldloss = monstershield #shield lost will be used for animations
+                        monstershield = 0
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
+                        
+                    elif monstershield > 0 and monstershield > totaldmg:
+                        shieldloss = totaldmg 
+                        monstershield = monstershield - totaldmg
+                        
+                    elif monstershield == 0:                    
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
+    
+                    fightmp += 2 
+
+                elif spell["Name"] == "Advance Shield":                
+                    if monstershield > 0 and totaldmg > monstershield:
+                        totaldmg - monstershield
+                        shieldloss = monstershield #shield lost will be used for animations
+                        monstershield = 0
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
+
+                    elif monstershield > 0 and monstershield > totaldmg:
+                        shieldloss = totaldmg 
+                        monstershield = monstershield - totaldmg
+                        
+                    elif monstershield == 0:                    
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
                     
-                    fightmp = 0
-                    fightmp += 3 
+                    fightmp += 2 
 
-                elif monstershield == 0:                    
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-                    fightmp = 0
-                    fightmp += 3 
- 
-                variablesUpdate()
-
-            elif spell["Name"] == "Advance Shield":
-                if monstershield > 0 and totaldmg > monstershield:
-                    totaldmg - monstershield
-                    shieldloss = monstershield #shield lost will be used for animations
-                    monstershield = 0
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-
-                    fightmp -= 2 
-                    fightmp += 3 
-
-                elif monstershield > 0 and monstershield > totaldmg:
-                    shieldloss = totaldmg 
-                    monstershield = monstershield - totaldmg
-                    
-                    fightmp -= 2 
-                    fightmp += 3 
-
-                elif monstershield == 0:                    
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-                    fightmp -= 2 
-                    fightmp += 3 
- 
-                variablesUpdate()
+                    #this gives shield at random from half of damage dealt to full damage dealt
+                    playershield += random.randint(totaldmg/2,totaldmg)
         
-        elif character_selected == "Mage":
-            mpdmg = (mpused + (spell["MP Cost"]/2))*3
-            #holds the spell dmg calculations
+            elif character_selected == "Mage":
+                mpdmg = (mpused + (spell["MP Cost"]/2))*3
+                #holds the spell dmg calculations
 
-            totaldmgcalculations()
-            if spell["Name"] == "Staff Attack":
-                if monstershield > 0 and totaldmg > monstershield:
-                    totaldmg - monstershield
-                    shieldloss = monstershield #shield lost will be used for animations
-                    monstershield = 0
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
+                totaldmgcalculations()
+                if spell["Name"] == "Staff Attack":
+                    if monstershield > 0 and totaldmg > monstershield:
+                        totaldmg - monstershield
+                        shieldloss = monstershield #shield lost will be used for animations
+                        monstershield = 0
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
 
-                    fightmp += 3 
+                        fightmp += 3 
 
-                elif monstershield > 0 and monstershield > totaldmg:
-                    shieldloss = totaldmg 
-                    monstershield = monstershield - totaldmg
-                    
-                    fightmp += 3 
+                    elif monstershield > 0 and monstershield > totaldmg:
+                        shieldloss = totaldmg 
+                        monstershield = monstershield - totaldmg
+                        
+                        fightmp += 3 
 
-                elif monstershield == 0:                    
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-                    fightmp += 3 
- 
-                variablesUpdate()
+                    elif monstershield == 0:                    
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
+                        fightmp += 3 
+    
+                    variablesUpdate()
 
-            elif spell["Name"] == "MP Drain":
+                elif spell["Name"] == "MP Drain":
 
-                totaldmg -= (mpused + (spell["MP Cost"]/2))*3#this here because the dmg calculations added more dmg, this spell only supossed to do slight damage
-                if monstershield > 0 and totaldmg > monstershield:
-                    totaldmg - monstershield
-                    shieldloss = monstershield #will be used for animations
-                    monstershield = 0
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
+                    totaldmg -= (mpused + (spell["MP Cost"]/2))*3#this here because the dmg calculations added more dmg, this spell only supossed to do slight damage
+                    if monstershield > 0 and totaldmg > monstershield:
+                        totaldmg - monstershield
+                        shieldloss = monstershield #will be used for animations
+                        monstershield = 0
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
 
-                    mploss = random.randint(3, 9)
-                    fightmp -= 3 
-                    mmp - mploss
-                    fightmp += mploss 
+                        mploss = random.randint(3, 9)
+                        mmp - mploss
+                        fightmp += mploss 
 
-                elif monstershield > 0 and monstershield > totaldmg:
-                    shieldloss = totaldmg 
-                    monstershield = monstershield - totaldmg
-                    
-                    mploss = random.randint(3, 9)
-                    fightmp -= 3 
-                    mmp - mploss
-                    fightmp += mploss 
+                    elif monstershield > 0 and monstershield > totaldmg:
+                        shieldloss = totaldmg 
+                        monstershield = monstershield - totaldmg
+                        
+                        mploss = random.randint(3, 9)
+                        mmp - mploss
+                        fightmp += mploss 
 
-                elif monstershield == 0:                    
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
+                    elif monstershield == 0:                    
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
 
-                    mploss = random.randint(3, 9)
-                    fightmp -= 3 
-                    mmp - mploss
-                    fightmp += mploss 
- 
-                variablesUpdate()
+                        mploss = random.randint(3, 9)
+                        mmp - mploss
+                        fightmp += mploss 
+    
+                elif spell["Name"] == "HP Drain":
+                    if monstershield > 0 and totaldmg > monstershield:
+                        totaldmg - monstershield
+                        shieldloss = monstershield #shield lost will be used for animations
+                        monstershield = 0
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
 
-            elif spell["Name"] == "HP Drain":
-                if monstershield > 0 and totaldmg > monstershield:
-                    totaldmg - monstershield
-                    shieldloss = monstershield #shield lost will be used for animations
-                    monstershield = 0
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
+                        fighthp += monsterHpLoss
 
-                    fighthp += monsterHpLoss
+                    elif monstershield > 0 and monstershield > totaldmg:
+                        shieldloss = totaldmg 
+                        monstershield = monstershield - totaldmg
+                        fighthp += monsterHpLoss
 
-                elif monstershield > 0 and monstershield > totaldmg:
-                    shieldloss = totaldmg 
-                    monstershield = monstershield - totaldmg
-                    fighthp += monsterHpLoss
+                    elif monstershield == 0:                    
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
+                        fighthp += monsterHpLoss
+    
+                elif spell["Name"] == "Magic Explosion":
+                    if monstershield > 0 and totaldmg > monstershield:
+                        totaldmg - monstershield
+                        shieldloss = monstershield #shield lost will be used for animations
+                        monstershield = 0
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
 
-                elif monstershield == 0:                    
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-                    fighthp += monsterHpLoss
- 
-                variablesUpdate()
+                    elif monstershield > 0 and monstershield > totaldmg:
+                        shieldloss = totaldmg 
+                        monstershield = monstershield - totaldmg
 
-            elif spell["Name"] == "Magic Explosion":
-                if monstershield > 0 and totaldmg > monstershield:
-                    totaldmg - monstershield
-                    shieldloss = monstershield #shield lost will be used for animations
-                    monstershield = 0
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-
-                elif monstershield > 0 and monstershield > totaldmg:
-                    shieldloss = totaldmg 
-                    monstershield = monstershield - totaldmg
-
-                elif monstershield == 0:                    
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
- 
-                variablesUpdate()
-
-            elif spell["Name"] == "Damage Debuff":
-                if monstershield > 0 and totaldmg > monstershield:
+                    elif monstershield == 0:                    
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
+    
+                elif spell["Name"] == "Damage Debuff":
                     monster_debuffs.append({"State": "Monster Debuff", "Name":  "Damage Debuff", "Turns": 2, "Effect": "Reduces Enemy Damage by 40% for two turns", "Value": 0.40})
- 
-                variablesUpdate()
 
+            elif character_selected == "Healer":
+                healingbonus = mpused * (currentlvl*1.5)
+                healingspell = False #this is for the def because some spells actually heal while others will have just the healing bonus
+                def healingCalculations(): #this def was made because in future spells dont want to always have to do the calculations just for the healing bonus
+                                    
+                    if healingspell == True:
+                        if spell["Name"] == "HP Drain" or spell["Name"] == "Heal":
+                            if fighthp < hp:
+                                fighthp += healingbonus + totaldmg
+                                if fighthp > hp:
+                                        fighthp = hp
 
+                            elif fighthp == hp or fighthp > hp: 
+                                    healingbonus = 0
+                                    
+                    #makes it so that they dont go over their original hp cap
+                    elif fighthp < hp:
+                        fighthp += healingbonus
+                        if fighthp > hp:
+                                fighthp = hp
+
+                    elif fighthp == hp or fighthp > hp: 
+                            healingbonus = 0
+
+                totaldmgcalculations()
+                #holds the spell dmg calculations
+
+                if spell["Name"] == "Wand Attack":
+                    if monstershield > 0 and totaldmg > monstershield:
+                        totaldmg - monstershield
+                        shieldloss = monstershield #shield lost will be used for animations
+                        monstershield = 0
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
+
+                    elif monstershield > 0 and monstershield > totaldmg:
+                        shieldloss = totaldmg 
+                        monstershield = monstershield - totaldmg
+                        
+                    elif monstershield == 0:                    
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
+                        
+                    fightmp += 3 
+
+                    healingCalculations()
+    
+                elif spell["Name"] == "HP Drain":
+                    if monstershield > 0 and totaldmg > monstershield:
+                        totaldmg - monstershield
+                        shieldloss = monstershield #shield lost will be used for animations
+                        monstershield = 0
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
+
+                    elif monstershield > 0 and monstershield > totaldmg:
+                        shieldloss = totaldmg 
+                        monstershield = monstershield - totaldmg
+
+                    elif monstershield == 0:                    
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
+
+                    healingspell = True
+                    healingCalculations()
+
+                elif spell["Name"] == "Protective Barrier":
+                        playershield += mpdmg*(currentlvl*1.5)
+                        healingCalculations()
+            
+                elif spell["Name"] == "Sacrificial Lamb":
+                    #this adds spell effect dmg and halves hp
+                    if playershield > 0:
+                        totaldmg += fighthp/2 + playershield/2
+
+                    else:
+                        totaldmg += fighthp/2
+                    fighthp /= 2
+
+                    if monstershield > 0 and totaldmg > monstershield:
+                        totaldmg - monstershield
+                        shieldloss = monstershield #shield lost will be used for animations
+                        monstershield = 0
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
+
+                    elif monstershield > 0 and monstershield > totaldmg:
+                        shieldloss = totaldmg 
+                        monstershield = monstershield - totaldmg
+                        
+                    elif monstershield == 0:                    
+                        monsterHpLoss = mhp - totaldmg
+                        mhp - totaldmg
+
+                    fightmp = 0 
+
+                    healingCalculations()
+        
+                elif spell["Name"] == "Heal":
+                    healingspell = True
+                    healingCalculations()
+
+            variablesUpdate()
             window.update()
-
-        elif character_selected == "Healer":
-            #holds the spell dmg calculations
-            healerSpellDmg = [
-                {
-                    "Name": "Wand Attack",
-                    "Damage": {basedmg},
-                    "Description": f"Hits the target without any MP to lightly damage the target. Heals 5 + ({currentlvl} * 1.5) HP."
-                },
-                {
-                    "Name": "HP Drain",
-                    "Damage": f"15 + ({currentlvl} * 1.5)",
-                    "Description": "Drains the target's HP to heal itself. Heals 10 HP."
-                },
-                {
-                    "Name": "Protective Barrier",
-                    "Damage": "0",
-                    "Description": f"Casts a strong shield to block enemy attacks. The barrier equals (6 * 2) * ({currentlvl} / 2 + 1)."
-                },
-                {
-                    "Name": "Sacrificial Lamb",
-                    "Damage": f"Current HP / 2 + 20 + ({currentlvl} * 1.5) + Barrier / 2",
-                    "Description": "Sacrifices half of your current HP and all of your MP to deal one high-damage attack. If you have a barrier, it also consumes half of the barrier. Has a 3-turn cooldown starting from the beginning of the fight."
-                },
-                {
-                    "Name": "Heal",
-                    "MP Cost": 1,
-                    "Damage": "0",
-                    "Description": f"Heals 8 + ({currentlvl} * 1.5) HP at the cost of dealing no damage. The heal is boosted to help save yourself in times of need and low MP."
-                }
-            ]
-
-            if spell["Name"] == "Wand Attack":
-                if monstershield > 0 and totaldmg > monstershield:
-                    totaldmg - monstershield
-                    shieldloss = monstershield #shield lost will be used for animations
-                    monstershield = 0
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-
-                    fightmp -= 2 
-                    fightmp += 3 
-
-                elif monstershield > 0 and monstershield > totaldmg:
-                    shieldloss = totaldmg 
-                    monstershield = monstershield - totaldmg
-                    
-                    fightmp -= 2 
-                    fightmp += 3 
-
-                elif monstershield == 0:                    
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-                    fightmp -= 2 
-                    fightmp += 3 
- 
-                variablesUpdate()
-        
-            elif spell["Name"] == "HP Drain":
-                if monstershield > 0 and totaldmg > monstershield:
-                    totaldmg - monstershield
-                    shieldloss = monstershield #shield lost will be used for animations
-                    monstershield = 0
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-
-                    fightmp -= 2 
-                    fightmp += 3 
-
-                elif monstershield > 0 and monstershield > totaldmg:
-                    shieldloss = totaldmg 
-                    monstershield = monstershield - totaldmg
-                    
-                    fightmp -= 2 
-                    fightmp += 3 
-
-                elif monstershield == 0:                    
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-                    fightmp -= 2 
-                    fightmp += 3 
- 
-                variablesUpdate()
-        
-            elif spell["Name"] == "Protective Barrier":
-                if monstershield > 0 and totaldmg > monstershield:
-                    totaldmg - monstershield
-                    shieldloss = monstershield #shield lost will be used for animations
-                    monstershield = 0
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-
-                    fightmp -= 2 
-                    fightmp += 3 
-
-                elif monstershield > 0 and monstershield > totaldmg:
-                    shieldloss = totaldmg 
-                    monstershield = monstershield - totaldmg
-                    
-                    fightmp -= 2 
-                    fightmp += 3 
-
-                elif monstershield == 0:                    
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-                    fightmp -= 2 
-                    fightmp += 3 
- 
-                variablesUpdate()
-       
-            elif spell["Name"] == "Sacrificial Lamb":
-                if monstershield > 0 and totaldmg > monstershield:
-                    totaldmg - monstershield
-                    shieldloss = monstershield #shield lost will be used for animations
-                    monstershield = 0
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-
-                    fightmp -= 2 
-                    fightmp += 3 
-
-                elif monstershield > 0 and monstershield > totaldmg:
-                    shieldloss = totaldmg 
-                    monstershield = monstershield - totaldmg
-                    
-                    fightmp -= 2 
-                    fightmp += 3 
-
-                elif monstershield == 0:                    
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-                    fightmp -= 2 
-                    fightmp += 3 
- 
-                variablesUpdate()
-       
-            elif spell["Name"] == "Heal":
-                if monstershield > 0 and totaldmg > monstershield:
-                    totaldmg - monstershield
-                    shieldloss = monstershield #shield lost will be used for animations
-                    monstershield = 0
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-
-                    fightmp -= 2 
-                    fightmp += 3 
-
-                elif monstershield > 0 and monstershield > totaldmg:
-                    shieldloss = totaldmg 
-                    monstershield = monstershield - totaldmg
-                    
-                    fightmp -= 2 
-                    fightmp += 3 
-
-                elif monstershield == 0:                    
-                    monsterHpLoss = mhp - totaldmg
-                    mhp - totaldmg
-                    fightmp -= 2 
-                    fightmp += 3 
- 
-                variablesUpdate()
-
-
-        window.update()
     
     def show_spell_info(spell): #shows spell info in label when hovered over.
         spellinfo_lab.config(text=f"\t\t{spell["Name"]} \n MP Cost: {spell["Mp Cost"]} \nDamage: {spell["Damage"]} \nDescription: {spell["Description"]}", font=("Courier", 12, "bold"), wraplength=500, justify="left", anchor="w")
