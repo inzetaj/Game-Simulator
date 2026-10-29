@@ -14,25 +14,25 @@ import random
 7.    # if want to make gear would have to put 1 which monster drops what gear, how would character equip them, and an array that holds the information of the gears - could make the database work into this too. will use the dropdown to do determine that gear drop rates
     want to somehow encrypt my code so that people cant see it
     later on if decide to save information can just save the information from the variables and also include a portion where it updates the database in loading page - when i login can make an if and will take the stats saved in the database and make the variables = to that
-8. add restrictions on names so that can use profanity languages
+8. add restrictions on names so that can use profanity languages will use .upper so that regardless of upper or lowercase can still flag it -- will probably make a new variable like nameProfanitycheck = name.upper() then will use an if - will assign this to the create character button
 9. will need to replace class imgs - doesnt match with monsters
 10. create a logout button
 11.   in fight page  #need to make a message box or something that holds the information of the fight - can be small covering 4 commands
 12. make the game be able to save a game instance associated with a login/pass - would probably make an automatic save in loading page or whatever button you click before switching pages and then another save upon logging out
-13. make a file to hold all the imges so wont have multiple files all over the place and then redirect everything in the code
 14. include the spell bonus descriptions in fightscreen and main screen
 15. edit code to include a tutorial
 
         #Make new button called player stats that will have shield and mp and regular stats from stat window - and delete mp label
         #need to add shield to monster stats window
         #need to make shields update in variable updates - can include the original set in the if at top
-        #want to show mp for character and monster            
+        #want to show mp for monster  - label      
         #need to edit stats and monster window to include that physical or magical defence /2 is subtracted by dmg
         #need to make monster spells
         #found a bug where if press end turn too fast the game will freeze for a ec then the timer will go up drammatically past 90 and turn will go up by 1 every second
         #also if press end turn when u have 1 hp will cause a bug that will make you keep going from fight screen to main screen back n forth. - to fix this should put an hp check in end turn so monster turn will never start
+        #currently i think even if win monster stats wont increase so need to check on this
+        #currently count down keeps counting even after the fight has ended, its not being destroyed properly
         
-
         plan for now, get everything to work calculation and logic wise, then im going to go back in and add animations
             1. finish spell calculations
             2.Animations - 
@@ -40,6 +40,10 @@ import random
                 will create like same makeshift animation - when click spell a label will be and it shows dmg/heals/barriers then disappears after 3 seconds - would like it to fade out but no clue yet  -would be an if to decide who gets the label then  would be a probably have to make a def that calls ever 1 second for 3 seconds and make a variable that adds 1 each time until reach 3 then when 3 resets
                 will have it make a temporary label that shows the spell animations in between the two characters and a time sleep 0.1 and have it move across the label -might use ai for this part as a lot of work - think might just go ahead and use giphs
                 #if a spell grants bonuses or debuffs will have the effect go after the animations and put a after or something.
+                might make something like an aura around the character that changes depending on what spell they make - could also make it where the character moves a little, would like to make it move differently when casting a spell but think thats a tall order - might just make it where it changes the image temporarily to an attacking stance then changes it back once the animation is complete
+                if animationcompletion = false - animation() runs after whatever time it takes for the animation to finish and then make the completion true
+                    make anothe if on monster turn, if monster turn is activated and animationcompletion == false then wait until all animations are complete
+                        might need to make a variable that counts the animation times and everytime a spell is activated the number for that goes up and it is reduced during the .after the animation calls for
         
             3. Button deactivation - 
                 thinking of making it a def  and before countdown def and call it in countdown - and what it will basically do is if go ahead and make a variable (not character turn because that can bug, perhaps will be like a boolean - basically it will be a variable to check if its already called or not, can add more conditions in monster def), and if character turn = true then it will call the def to check to deactivate buttons with a .after, and inside the def will be another .after to check it again - make sure to also make a character turn variable so when its monster turn this stops activating - will make an if with that
@@ -56,11 +60,13 @@ import random
 17. need to include more tips- also want to edit it abit because i think i have extra codes , could just try appending based on class - 
     - for each spell a monster cast after a certain ammount of attacks they will gain dmg due to radiation
     - you will lose 1 hp every turn due to radiation, so make sure to finish the fight quickly
+    - every turn you will gain 1 mp
     - monsters uses their own mp to cast spells, monsters cannot cast spells without mp and if they start their turn without mp they will skip
+    - If you hover over spells info about the spell will pop up
 
 18. want to make the graphics more better, i might include giphs and maybe a video like wakfu that introduces the game - and for fighting when you click spell fasts the animations dont glitch and instead they are just done way faster. 
 19. need to redo spell arrays - might also make a class so can use edit make an object that holds editable data instead of lots of different variables- wanna make another portion called effect so the description isnt holding calculations- it might be better to just exlcude the formula in spell array dmg and just put the actual spell dmg - who wants to do math? - will probably have to make a spell def so the arrays get redefined too - actually rethinking this and might be better just to use variables and since i can update them and only use the array as an initial starting point.
-20. use date time and have it in the fight mini screen that tracks whats happening.
+20. add a cap to mp
 """                     
 #--------------------------------------------Global----------------------
 password = "password"
@@ -102,18 +108,18 @@ monsters = [
         "hp": 70 + currentlvl*1.5, 
         "mp": 40, 
         "physical_defence": 1 + currentlvl*1.5, 
-        "magical_defence": 10 + currentlvl*1.5, 
+        "magical_defence": 5 + currentlvl*1.5, 
         "physical_dmg": 0 + currentlvl*1.5, 
-        "magical_dmg": 20 + currentlvl*1.5, 
+        "magical_dmg": 15 + currentlvl*1.5, 
     },
     {#physical strong but magically weak
         "name": "Bulmar", 
         "lvl": currentlvl, 
         "hp": 100 + currentlvl*1.5, 
         "mp": 20, 
-        "physical_defence": 10 + currentlvl*1.5, 
+        "physical_defence": 5 + currentlvl*1.5, 
         "magical_defence": 1, 
-        "physical_dmg": 20 + currentlvl*1.5, 
+        "physical_dmg": 15 + currentlvl*1.5, 
         "magical_dmg": 0 + currentlvl*1.5, 
     },
     {#boss
@@ -121,18 +127,18 @@ monsters = [
         "lvl": currentlvl, 
         "hp": 130 + currentlvl*1.5, 
         "mp": 50 + currentlvl*1.5, 
-        "physical_defence": 15 + currentlvl*1.5, 
-        "magical_defence": 15 + currentlvl*1.5, 
-        "physical_dmg": 15 + currentlvl*1.5,
-        "magical_dmg": 15 + currentlvl*1.5, 
+        "physical_defence": 10 + currentlvl*1.5, 
+        "magical_defence": 10 + currentlvl*1.5, 
+        "physical_dmg": 10 + currentlvl*1.5,
+        "magical_dmg": 10 + currentlvl*1.5, 
     },
     {#all round tank but weak dmg -
         "name": "Hierophant",
         "lvl": currentlvl, 
         "hp": 110 + currentlvl*1.5, 
         "mp": 20, 
-        "physical_defence": 10 + currentlvl*1.5, 
-        "magical_defence": 10 + currentlvl*1.5, 
+        "physical_defence": 5 + currentlvl*1.5, 
+        "magical_defence": 5 + currentlvl*1.5, 
         "physical_dmg": 5 + currentlvl*1.5, 
         "magical_dmg": 5 + currentlvl*1.5, 
     }
@@ -146,31 +152,36 @@ warriorspells = [
         "Name": "Basic Attack",
         "MP Cost": 0,
         "Damage": "(Base damage * 1.5)",
-        "Description": "Hits the target without any MP to lightly damage the target. Gains 3 MP."
+        "Description": "Hits the target without any MP to lightly damage the target.",
+        "Spell Icon": "Images/M_Warrior Spell Icons/m_Basic Attack.png"
     },
     {
         "Name": "Strike",
         "MP Cost": 1,
         "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
-        "Description": "Strikes the target quickly with your sword. Gains 3 MP."
+        "Description": "Strikes the target quickly with your sword.",
+        "Spell Icon": "Images/M_Warrior Spell Icons/m_Strike.png"
     },
     {
         "Name": "Swordsmanship",
         "MP Cost": 2,
         "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
-        "Description": "Uses MP to deal massive damage in a short time. Gains 3 MP."
+        "Description": "Uses MP to deal massive damage in a short time.",
+        "Spell Icon": "Images/M_Warrior Spell Icons/m_Swordsmanship.png"
     },
     {
         "Name": "Warrior's Sword",
         "MP Cost": "100%",
         "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
-        "Description": "Uses all your MP to deal a very heavy attack. Gains 3 MP."
+        "Description": "Uses all your MP to deal a very heavy attack.",
+        "Spell Icon": "Images/M_Warrior Spell Icons/m_Warrior's Sword.png"
     },
     {
         "Name": "Advance Shield",
         "MP Cost": 3,
         "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
-        "Description": "Hits the target to deal damage and steals some HP with MP and generates a shield with it to advance next turn with. Gains 3 MP. The shield is generated at random but will never be less than half of your outputed damage."
+        "Description": "Hits the target to deal damage and steals some HP with MP and generates a shield with it to advance next turn with. The shield is generated at random but will never be less than half of your outputed damage.",
+        "Spell Icon": "Images/M_Warrior Spell Icons/m_Advance Shield.png"
     }
 ]
 
@@ -179,64 +190,81 @@ magespells = [
         "Name": "Staff Attack",
         "MP Cost": 0,
         "Damage": "Base Damage",
-        "Description": "Hits the target without any MP to lightly damage the target. Gains 3 MP."
+        "Description": "Hits the target without any MP to lightly damage the target. Gains 3 MP.",
+        "Spell Icon": "Images/Mage Spell Icons/Staff Attack.png"
+
     },
     {
         "Name": "MP Drain",
         "MP Cost": 3,
         "Damage": "(lvl * 1.5)",
-        "Description": "Drains the target of MP equal to tripple the MP used. Causes slight damage as the target is being drained. Disables the target for 1 turn due to magic poisoning."
+        "Description": "Drains the target of MP equal to tripple the MP used. Causes slight damage as the target is being drained. Disables the target for 1 turn due to magic poisoning.",
+        "Spell Icon": "Images/Mage Spell Icons/Mp Drain.png"
+
     },
     {
         "Name": "HP Drain",
         "MP Cost": 5,
         "Damage": "15 + (lvl * 1.5)",
-        "Description": "Uses magic to drain the target's HP."
+        "Description": "Uses magic to drain the target's HP.",
+        "Spell Icon": "Images/Mage Spell Icons/HP Drain.png"
+
     },
     {
         "Name": "Magic Explosion",
         "MP Cost": 10,
         "Damage": "30 + (lvl * 1.5)",
-        "Description": "Explodes MP onto the target to deal massive damage."
+        "Description": "Explodes MP onto the target to deal massive damage.",
+        "Spell Icon": "Images/Mage Spell Icons/Magic Explosion.png"
+
     },
     {
         "Name": "Damage Debuff",
         "MP Cost": 4, 
         "Damage": "0", 
-        "Description": "Reduces  Enemy Damage by 40% for two turns"
+        "Description": "Reduces  Enemy Damage by 40% for two turns",
+        "Spell Icon": "Images/Mage Spell Icons/Damage Debuff.png"
+
     }
 ]
 
 healerspells = [
     {
-        "Name": "Wand Attack",
+        "Name": "Palm Strike",
         "MP Cost": 0,
         "Damage": "Base Damage",
-        "Description": "Hits the target without any MP to lightly damage the target."
+        "Description": "Hits the target without any MP to lightly damage the target.",
+        "Spell Icon": "Images/Healer Spell Icons/Palm Strike.png" 
     },
     {
         "Name": "HP Drain",
         "MP Cost": 5,
         "Damage": "(MP Used * 3) + (lvl * 1.5)",
-        "Description": "Drains the target's HP to heal itself."
+        "Description": "Drains the target's HP to heal itself.",
+        "Spell Icon": "Images/Healer Spell Icons/Hp Drain.png"
+
     },
     {
         "Name": "Protective Barrier",
         "MP Cost": 3,
         "Damage": "0",
-        "Description": "Casts a strong shield to block enemy attacks. The shield equals (MP Used * 3) * (lvl * 1.5)."
+        "Description": "Casts a strong shield to block enemy attacks. The shield equals (MP Used * 3) * (lvl * 1.5).",
+        "Spell Icon": "Images/Healer Spell Icons/Protective Barrier.png"
     },
     {
         "Name": "Sacrificial Lamb",
         "MP Cost": "100%",
         "Damage": "Current HP / 2 + (MP Used * 3) + (lvl * 1.5) + shield / 2",
-        "Description": "Sacrifices half of your current HP, shield, and all of your MP to deal one high-damage attack. If you have a barrier, it also consumes half of the barrier. Has a 3-turn cooldown starting from the beginning of the fight."
+        "Description": "Sacrifices half of your current HP, shield, and all of your MP to deal one high-damage attack. If you have a barrier, it also consumes half of the barrier. Has a 3-turn cooldown starting from the beginning of the fight.",
+        "Spell Icon": "Images/Healer Spell Icons/Sacrificial Lamb.png"
+
     },
     {
         "Name": "Heal",
         "MP Cost": 1,
         "Damage": "0",
-        "Description": "Heals (MP Used * 3) + (lvl * 1.5) HP at the cost of dealing no damage."
+        "Description": "Heals (MP Used * 3) + (lvl * 1.5) HP at the cost of dealing no damage.",
+        "Spell Icon": "Images/Healer Spell Icons/Heal.png"
     }
 ]
 
@@ -253,7 +281,7 @@ window.configure(bg="black")
 window.resizable(False, False)
 
  #change window background
-bg_image = tk.PhotoImage(file="main.png")
+bg_image = tk.PhotoImage(file="Images/loginscreenbg.png")
 bg_label = tk.Label(window, image=bg_image)
 bg_label.place(x=0, y=0, relwidth=1, relheight=1) # relwidth/height=1 stretches it 100%
 
@@ -349,7 +377,7 @@ def loadingpage():
                 print("Code already deleted")
 
                     #replace background img 
-        loadingbg = tk.PhotoImage(file="loadingbg2.png")
+        loadingbg = tk.PhotoImage(file="Images/loadingbg.png")
         loadingbg_lab = tk.Label(window, image=loadingbg)
         loadingbg_lab.place(x=0, y=0, relwidth=1, relheight=1) # relwidth/height=1 stretches it 100%
         #without this it wouldnt load for some reason - directly saving the whole bg 
@@ -477,6 +505,7 @@ def loadingpage():
         # make it destroy everything again when its done
         loadingtxt.destroy()
         loadingbg_lab.destroy()
+        randominfoarray = None
         randominfo_lab.destroy()
         loadingtxt.destroy()
         window.update_idletasks() 
@@ -512,7 +541,7 @@ def characterscreen():
         #--------------character screen besides button-------------
 
      #replace background img 
-    characterscreenbg = tk.PhotoImage(file="loadingbg2.png")
+    characterscreenbg = tk.PhotoImage(file="Images/loadingbg.png")
     characterscreenbg_lab = tk.Label(window, image=characterscreenbg)
     characterscreenbg_lab.place(x=0, y=0, relwidth=1, relheight=1) # relwidth/height=1 stretches it 100%
         #without this it wouldnt load for some reason - directly saving the whole bg 
@@ -538,122 +567,139 @@ def characterscreen():
          if character_selected == "Warrior":
 
             #switches the preview img for mage
-            m_mageimg = tk.PhotoImage(file="m_mage.png")
+            m_mageimg = tk.PhotoImage(file="Images/m_mage.png")
             classimgs_lab.config(image=m_mageimg)
             classimgs_lab.image = m_mageimg
 
             #switches the preview img for healer
-            m_healerimg = tk.PhotoImage(file="m_healer.png")
+            m_healerimg = tk.PhotoImage(file="Images/m_healer.png")
             classimgs_lab.config(image=m_healerimg)
             classimgs_lab.image = m_healerimg
 
             #switches the preview img for warrior
-            m_warriorimg = tk.PhotoImage(file="m_warrior.png")
+            m_warriorimg = tk.PhotoImage(file="Images/m_warrior.png")
             classimgs_lab.config(image=m_warriorimg)
             classimgs_lab.image = m_warriorimg
 
             #switches button icons to female warrior
-            m_warrior_icon = tk.PhotoImage(file="m_warrioricon.png")
+            m_warrior_icon = tk.PhotoImage(file="Images/m_warrioricon.png")
             warrior_btn.config(image=m_warrior_icon)
             warrior_btn.image = m_warrior_icon
 
             #switches button icon to female mage
-            m_mage_icon = tk.PhotoImage(file="m_mageicon.png")
+            m_mage_icon = tk.PhotoImage(file="Images/m_mageicon.png")
             mage_btn.config(image=m_mage_icon)
             mage_btn.image = m_mage_icon
 
              ##switch button icon to female healer
-            m_healer_icon = tk.PhotoImage(file="m_healericon.png")
+            m_healer_icon = tk.PhotoImage(file="Images/m_healericon.png")
             healer_btn.config(image=m_healer_icon)
             healer_btn.image = m_healer_icon 
 
             #set txts because without img shows up with no label if dont click class first
-            info_labtxt.set("The Warrior is a class focused on delivering high physical damage. Unlike the mage class, it doesn't rely all on mp to cast spells. While highly durable, they have no built-in healing abilities. As they do not rely on mp they have little protecting against magical attacks.\n\n Bonuses: Base damage is multiplied by 1.5 and all spells will use base damage and generate MP but the mp is generated at 2 per spell instead of 3 per spell \n\n\n\n Difficulty: Low\n\n *Make sure to click a class and type a name before you hit the create character button or you will get an error.")
+            info_labtxt.set("The Warrior is a class focused on delivering high " \
+            "physical damage. Unlike the mage class, it doesn't rely all on mp to " \
+            "cast spells. While highly durable, they have no built-in healing abilities." \
+            " As they do not rely on mp they have little protecting against magical attacks." \
+            "\n\n Bonuses: Base damage is multiplied by 1.5 and all spells will use base damage"
+            " and generate MP but the mp is generated at 2 per spell instead of 3 per spell" \
+            " \n\n\n Difficulty: Low\n\n")
 
          elif character_selected == "Mage":
 
             #switches the preview img for warrior
-            m_warriorimg = tk.PhotoImage(file="m_warrior.png")
+            m_warriorimg = tk.PhotoImage(file="Images/m_warrior.png")
             classimgs_lab.config(image=m_warriorimg)
             classimgs_lab.image = m_warriorimg
 
             #switches the preview img for healer
-            m_healerimg = tk.PhotoImage(file="m_healer.png")
+            m_healerimg = tk.PhotoImage(file="Images/m_healer.png")
             classimgs_lab.config(image=m_healerimg)
             classimgs_lab.image = m_healerimg
 
             #switches the preview img for mage
-            m_mageimg = tk.PhotoImage(file="m_mage.png")
+            m_mageimg = tk.PhotoImage(file="Images/m_mage.png")
             classimgs_lab.config(image=m_mageimg)
             classimgs_lab.image = m_mageimg
 
             #switches button icons to female warrior
-            m_warrior_icon = tk.PhotoImage(file="m_warrioricon.png")
+            m_warrior_icon = tk.PhotoImage(file="Images/m_warrioricon.png")
             warrior_btn.config(image=m_warrior_icon)
             warrior_btn.image = m_warrior_icon
 
             #switches button icon to female mage
-            m_mage_icon = tk.PhotoImage(file="m_mageicon.png")
+            m_mage_icon = tk.PhotoImage(file="Images/m_mageicon.png")
             mage_btn.config(image=m_mage_icon)
             mage_btn.image = m_mage_icon
 
              ##switch button icon to female healer
-            m_healer_icon = tk.PhotoImage(file="m_healericon.png")
+            m_healer_icon = tk.PhotoImage(file="Images/m_healericon.png")
             healer_btn.config(image=m_healer_icon)
             healer_btn.image = m_mage_icon 
 
             #set txts because without img shows up with no label if dont click class first
-            info_labtxt.set("The Mage is a class focused on delivering explosive magical damage from a distance. Unlike physical classes, it relies heavily on a large mp pool to cast its powerful destructive spells. While they possess incredible offensive capabilities, they have a very low health pool and weak physical defenses.\n\n Bonuses: Magic damage is increased by half of the magic used.\n\n\n Difficulty: Medium\n\n *Make sure to click a class and type a name before you hit the create character button or you will get an error.")
+            info_labtxt.set("The Mage is a class focused on delivering explosive " \
+            "magical damage from a distance. Unlike physical classes, it relies " \
+            "heavily on a large mp pool to cast its powerful destructive spells. " \
+            "While they possess incredible offensive capabilities, they have a very" \
+            " low health pool and weak physical defenses.\n\n Bonuses: Magic damage"
+            " is increased by half of the magic used.\n\n\n Difficulty: Medium\n\n")
 
          elif character_selected == "Healer":
 
             #switches the preview img for warrior
-            m_warriorimg = tk.PhotoImage(file="m_warrior.png")
+            m_warriorimg = tk.PhotoImage(file="Images/m_warrior.png")
             classimgs_lab.config(image=m_warriorimg)
             classimgs_lab.image = m_warriorimg
 
             #switches the preview img for mage
-            m_mageimg = tk.PhotoImage(file="m_mage.png")
+            m_mageimg = tk.PhotoImage(file="Images/m_mage.png")
             classimgs_lab.config(image=m_mageimg)
             classimgs_lab.image = m_mageimg
 
             #switches the preview img for healer
-            m_healerimg = tk.PhotoImage(file="m_healer.png")
+            m_healerimg = tk.PhotoImage(file="Images/m_healer.png")
             classimgs_lab.config(image=m_healerimg)
             classimgs_lab.image = m_healerimg
 
             #switches button icons to female warrior
-            m_warrior_icon = tk.PhotoImage(file="m_warrioricon.png")
+            m_warrior_icon = tk.PhotoImage(file="Images/m_warrioricon.png")
             warrior_btn.config(image=m_warrior_icon)
             warrior_btn.image = m_warrior_icon
 
             #switches button icon to female mage
-            m_mage_icon = tk.PhotoImage(file="m_mageicon.png")
+            m_mage_icon = tk.PhotoImage(file="Images/m_mageicon.png")
             mage_btn.config(image=m_mage_icon)
             mage_btn.image = m_mage_icon
 
              ##switch button icon to female healer
-            m_healer_icon = tk.PhotoImage(file="m_healericon.png")
+            m_healer_icon = tk.PhotoImage(file="Images/m_healericon.png")
             healer_btn.config(image=m_healer_icon)
             healer_btn.image = m_healer_icon 
 
             #set txts because without img shows up with no label if dont click class first
-            info_labtxt.set("The Healer is a class focused on self heals and deals low damage for long term fights. It relies on a steady use of mp to cast restorative spells and protective barriers during combat. While they can constantly recover from damage, they possess very low physical and magical damage output but can do a 1 time burst damage with the cost of half their life and all their mp.\n\n Bonuses: Each spell has a healing bonus which is the MP used multiplied by your current lvl * 1.5 and is applied to every spell. \n\n\n Difficulty:  high\n\n *Make sure to click a class and type a name before you hit the create character button or you will get an error.")
+            info_labtxt.set("The Healer is a class focused on self heals and deals low" \
+            " damage for long term fights. It relies on a steady use of mp to cast restorative" \
+            " spells and protective barriers during combat. While they can constantly recover" \
+            " from damage, they possess very low physical and magical damage output but can do" \
+            " a 1 time burst damage with the cost of half their life and all their mp.\n\n" \
+            " Bonuses: Each spell has a healing bonus which is the MP used multiplied by your current" \
+            " lvl * 1.5 and is applied to every spell.\n\n\n Difficulty:  high\n\n")
 
          else: # updates all button icons but not preview, there are ifs inside of chose a class that will check what the gender is
 
             #switches button icons to female warrior
-            m_warrior_icon = tk.PhotoImage(file="m_warrioricon.png")
+            m_warrior_icon = tk.PhotoImage(file="Images/m_warrioricon.png")
             warrior_btn.config(image=m_warrior_icon)
             warrior_btn.image = m_warrior_icon
 
             #switches button icon to female mage
-            m_mage_icon = tk.PhotoImage(file="m_mageicon.png")
+            m_mage_icon = tk.PhotoImage(file="Images/m_mageicon.png")
             mage_btn.config(image=m_mage_icon)
             mage_btn.image = m_mage_icon
 
              ##switch button icon to female healer
-            m_healer_icon = tk.PhotoImage(file="m_healericon.png")
+            m_healer_icon = tk.PhotoImage(file="Images/m_healericon.png")
             healer_btn.config(image=m_healer_icon)
             healer_btn.image = m_healer_icon 
 
@@ -668,122 +714,140 @@ def characterscreen():
         if character_selected == "Warrior":
 
             #switches the preview img for mage
-            f_mageimg = tk.PhotoImage(file="f_mage.png")
+            f_mageimg = tk.PhotoImage(file="Images/f_mage.png")
             classimgs_lab.config(image=f_mageimg)
             classimgs_lab.image = f_mageimg
 
             #switches the preview img for healer
-            f_healerimg = tk.PhotoImage(file="f_healer.png")
+            f_healerimg = tk.PhotoImage(file="Images/f_healer.png")
             classimgs_lab.config(image=f_healerimg)
             classimgs_lab.image = f_healerimg
 
             #switches the preview img for warrior
-            f_warriorimg = tk.PhotoImage(file="f_warrior.png")
+            f_warriorimg = tk.PhotoImage(file="Images/f_warrior.png")
             classimgs_lab.config(image=f_warriorimg)
             classimgs_lab.image = f_warriorimg
 
             #switches button icons to female warrior
-            f_warrior_icon = tk.PhotoImage(file="f_warrioricon.png")
+            f_warrior_icon = tk.PhotoImage(file="Images/f_warrioricon.png")
             warrior_btn.config(image=f_warrior_icon)
             warrior_btn.image = f_warrior_icon
 
             #switches button icon to female mage
-            f_mage_icon = tk.PhotoImage(file="f_mageicon.png")
+            f_mage_icon = tk.PhotoImage(file="Images/f_mageicon.png")
             mage_btn.config(image=f_mage_icon)
             mage_btn.image = f_mage_icon
 
              ##switch button icon to female healer
-            f_healer_icon = tk.PhotoImage(file="f_healericon.png")
+            f_healer_icon = tk.PhotoImage(file="Images/f_healericon.png")
             healer_btn.config(image=f_healer_icon)
             healer_btn.image = f_healer_icon 
 
             #set txts because without img shows up with no label if dont click class first
-            info_labtxt.set("The Warrior is a class focused on delivering high physical damage. Unlike the mage class, it doesn't rely all on mp to cast spells. While highly durable, they have no built-in healing abilities. As they do not rely on mp they have little protecting against magical attacks.\n\n Bonuses: Base damage is multiplied by 1.5 \n\n\n\n Difficulty: Low\n\n *Make sure to click a class and type a name before you hit the create character button or you will get an error.")
+            info_labtxt.set("The Warrior is a class focused on delivering high physical " \
+            "damage. Unlike the mage class, it doesn't rely all on mp to " \
+            "cast spells. While highly durable, they have no built-in healing " \
+            "abilities. As they do not rely on mp they have little protecting against " \
+            "magical attacks.\n\n Bonuses: Base damage is multiplied by 1.5 and all spells" \
+            " will use base damage and generate MP but the mp is generated at 2 per spell instead" \
+            " of 3 per spell \n\n\n Difficulty: Low\n\n")
 
         elif character_selected == "Mage":
 
             #switches the preview img for warrior
-            f_warriorimg = tk.PhotoImage(file="f_warrior.png")
+            f_warriorimg = tk.PhotoImage(file="Images/f_warrior.png")
             classimgs_lab.config(image=f_warriorimg)
             classimgs_lab.image = f_warriorimg
 
             #switches the preview img for healer
-            f_healerimg = tk.PhotoImage(file="f_healer.png")
+            f_healerimg = tk.PhotoImage(file="Images/f_healer.png")
             classimgs_lab.config(image=f_healerimg)
             classimgs_lab.image = f_healerimg
 
             #switches the preview img for mage
-            f_mageimg = tk.PhotoImage(file="f_mage.png")
+            f_mageimg = tk.PhotoImage(file="Images/f_mage.png")
             classimgs_lab.config(image=f_mageimg)
             classimgs_lab.image = f_mageimg
 
             #switches button icons to female warrior
-            f_warrior_icon = tk.PhotoImage(file="f_warrioricon.png")
+            f_warrior_icon = tk.PhotoImage(file="Images/f_warrioricon.png")
             warrior_btn.config(image=f_warrior_icon)
             warrior_btn.image = f_warrior_icon
 
             #switches button icon to female mage
-            f_mage_icon = tk.PhotoImage(file="f_mageicon.png")
+            f_mage_icon = tk.PhotoImage(file="Images/f_mageicon.png")
             mage_btn.config(image=f_mage_icon)
             mage_btn.image = f_mage_icon
 
              ##switch button icon to female healer
-            f_healer_icon = tk.PhotoImage(file="f_healericon.png")
+            f_healer_icon = tk.PhotoImage(file="Images/f_healericon.png")
             healer_btn.config(image=f_healer_icon)
             healer_btn.image = f_healer_icon 
 
             #set txts because without img shows up with no label if dont click class first
-            info_labtxt.set("The Mage is a class focused on delivering explosive magical damage from a distance. Unlike physical classes, it relies heavily on a large mp pool to cast its powerful destructive spells. While they possess incredible offensive capabilities, they have a very low health pool and weak physical defenses.\n\n Bonuses: Magic damage is increased by half of the magic used.\n\n\n Difficulty: Medium\n\n *Make sure to click a class and type a name before you hit the create character button or you will get an error.")
+            info_labtxt.set("The Mage is a class focused on delivering explosive magical"\
+                             "damage from a distance. Unlike physical classes, it relies"\
+                               "heavily on a large mp pool to cast its powerful destructive spells."\
+                                 "While they possess incredible offensive capabilities, they have"\
+                                   "a very low health pool and weak physical defenses.\n\n"\
+                                     "Bonuses: Magic damage is increased by half of the magic used."\
+                                     "\n\n\n Difficulty: Medium\n\n")
 
         elif character_selected == "Healer":
 
             #switches the preview img for warrior
-            f_warriorimg = tk.PhotoImage(file="f_warrior.png")
+            f_warriorimg = tk.PhotoImage(file="Images/f_warrior.png")
             classimgs_lab.config(image=f_warriorimg)
             classimgs_lab.image = f_warriorimg
 
             #switches the preview img for mage
-            f_mageimg = tk.PhotoImage(file="f_mage.png")
+            f_mageimg = tk.PhotoImage(file="Images/f_mage.png")
             classimgs_lab.config(image=f_mageimg)
             classimgs_lab.image = f_mageimg
 
             #switches the preview img for healer
-            f_healerimg = tk.PhotoImage(file="f_healer.png")
+            f_healerimg = tk.PhotoImage(file="Images/f_healer.png")
             classimgs_lab.config(image=f_healerimg)
             classimgs_lab.image = f_healerimg
 
             #switches button icons to female warrior
-            f_warrior_icon = tk.PhotoImage(file="f_warrioricon.png")
+            f_warrior_icon = tk.PhotoImage(file="Images/f_warrioricon.png")
             warrior_btn.config(image=f_warrior_icon)
             warrior_btn.image = f_warrior_icon
 
             #switches button icon to female mage
-            f_mage_icon = tk.PhotoImage(file="f_mageicon.png")
+            f_mage_icon = tk.PhotoImage(file="Images/f_mageicon.png")
             mage_btn.config(image=f_mage_icon)
             mage_btn.image = f_mage_icon
 
              ##switch button icon to female healer
-            f_healer_icon = tk.PhotoImage(file="f_healericon.png")
+            f_healer_icon = tk.PhotoImage(file="Images/f_healericon.png")
             healer_btn.config(image=f_healer_icon)
             healer_btn.image = f_healer_icon 
 
             #set txts because without img shows up with no label if dont click class first
-            info_labtxt.set("The Healer is a class focused on self heals and deals low damage for long term fights. It relies on a steady use of mp to cast restorative spells and protective barriers during combat. While they can constantly recover from damage, they possess very low physical and magical damage output but can do a 1 time burst damage with the cost of half their life and all their mp.\n\n Bonuses: Each spell has better  individual bonuses than other classes.\n\n\n Difficulty:  high\n\n *Make sure to click a class and type a name before you hit the create character button or you will get an error.")
-
+            info_labtxt.set("The Healer is a class focused on self heals and deals low" \
+            " damage for long term fights. It relies on a steady use of mp to cast" \
+            " restorative spells and protective barriers during combat. While they can" \
+            " constantly recover from damage, they possess very low physical and magical" \
+            " damage output but can do a 1 time burst damage with the cost of half their" \
+            " life and all their mp.\n\n Bonuses: Each spell has a healing bonus which is" \
+            " the MP used multiplied by your current lvl * 1.5 and is applied to every spell" \
+            "\n\n\n Difficulty:  high\n\n") 
         else: # updates all button icons but not preview, there are ifs inside of chose a class that will check what the gender is
 
             #switches button icons to female warrior
-            f_warrior_icon = tk.PhotoImage(file="f_warrioricon.png")
+            f_warrior_icon = tk.PhotoImage(file="Images/f_warrioricon.png")
             warrior_btn.config(image=f_warrior_icon)
             warrior_btn.image = f_warrior_icon
 
             #switches button icon to female mage
-            f_mage_icon = tk.PhotoImage(file="f_mageicon.png")
+            f_mage_icon = tk.PhotoImage(file="Images/f_mageicon.png")
             mage_btn.config(image=f_mage_icon)
             mage_btn.image = f_mage_icon
 
              ##switch button icon to female healer
-            f_healer_icon = tk.PhotoImage(file="f_healericon.png")
+            f_healer_icon = tk.PhotoImage(file="Images/f_healericon.png")
             healer_btn.config(image=f_healer_icon)
             healer_btn.image = f_healer_icon 
 
@@ -894,9 +958,9 @@ def characterscreen():
     info_lab.place(relx=0.815, rely=0.41, anchor="center")
 
     #Load character icons for class buttons
-    warrior_icon = tk.PhotoImage(file="m_warrioricon.png")
-    mage_icon = tk.PhotoImage(file="m_mageicon.png")
-    healer_icon = tk.PhotoImage(file="m_healericon.png")
+    warrior_icon = tk.PhotoImage(file="Images/m_warrioricon.png")
+    mage_icon = tk.PhotoImage(file="Images/m_mageicon.png")
+    healer_icon = tk.PhotoImage(file="Images/m_healericon.png")
 
     #labels to hold class imgs & header
     previewheader_lab= tk.Label(window, text="Class Preview\n\n\n\n\n\n\n\n\n\n\n\n\n\n", image=None, compound="top", font = ("Ariel", 18, "bold"), fg="black", bg="purple", height=17, width=30) #compount top basically makes everything stack on top of each other and whatever goes first is at top
@@ -914,17 +978,24 @@ def characterscreen():
         character_selected = "Warrior"
 
         #switches the label text
-        info_labtxt.set("The Warrior is a class focused on delivering high physical damage. Unlike the mage class, it doesn't rely all on mp to cast spells. While highly durable, they have no built-in healing abilities. As they do not rely on mp they have little protecting against magical attacks.\n\n Bonuses: Base damage is multiplied by 1.5 \n\n\n\n Difficulty: Low\n\n *Make sure to click a class and type a name before you hit the create character button or you will get an error.")
+        info_labtxt.set("The Warrior is a class focused on delivering high" \
+        " physical damage. Unlike the mage class, it doesn't rely all on" \
+        " mp to cast spells. While highly durable, they have no built-in" \
+        " healing abilities. As they do not rely on mp they have little" \
+        " protecting against magical attacks.\n\n Bonuses: Base damage is" \
+        " multiplied by 1.5 and all spells will use base damage and generate" \
+        " MP but the mp is generated at 2 per spell instead of 3 per spell" \
+        " \n\n\n Difficulty: Low\n\n")
 
         if gender == "Female":
             #switches the preview img for warrior
-            f_warriorimg = tk.PhotoImage(file="f_warrior.png")
+            f_warriorimg = tk.PhotoImage(file="Images/f_warrior.png")
             classimgs_lab.config(image=f_warriorimg)
             classimgs_lab.image = f_warriorimg
 
         else:
             #switches the preview img
-            m_warriorimg = tk.PhotoImage(file="m_warrior.png")
+            m_warriorimg = tk.PhotoImage(file="Images/m_warrior.png")
             classimgs_lab.config(
                 image=m_warriorimg
             )
@@ -940,17 +1011,22 @@ def characterscreen():
         #switches the label text
         character_selected = "Mage"
 
-        info_labtxt.set("The Mage is a class focused on delivering explosive magical damage from a distance. Unlike physical classes, it relies heavily on a large mp pool to cast its powerful destructive spells. While they possess incredible offensive capabilities, they have a very low health pool and weak physical defenses.\n\n Bonuses: Magic damage is increased by half of the magic used.\n\n\n Difficulty: Medium\n\n *Make sure to click a class and type a name before you hit the create character button or you will get an error.")
+        info_labtxt.set("The Mage is a class focused on delivering explosive " \
+        "magical damage from a distance. Unlike physical classes, it relies " \
+        "heavily on a large mp pool to cast its powerful destructive spells. " \
+        "While they possess incredible offensive capabilities, they have a very " \
+        "low health pool and weak physical defenses.\n\n Bonuses: Magic damage is " \
+        "increased by half of the magic used.\n\n\n Difficulty: Medium\n\n")
 
         if gender == "Female":
             #switches the preview img for mage
-            f_mageimg = tk.PhotoImage(file="f_mage.png")
+            f_mageimg = tk.PhotoImage(file="Images/f_mage.png")
             classimgs_lab.config(image=f_mageimg)
             classimgs_lab.image = f_mageimg
         
         else:
             #switches the preview img
-            m_mageimg = tk.PhotoImage(file="m_mage.png")
+            m_mageimg = tk.PhotoImage(file="Images/m_mage.png")
             classimgs_lab.config(
                 image=m_mageimg
             )
@@ -965,17 +1041,23 @@ def characterscreen():
         character_selected = "Healer"
 
         #switches the label text
-        info_labtxt.set("The Healer is a class focused on self heals and deals low damage for long term fights. It relies on a steady use of mp to cast restorative spells and protective barriers during combat. While they can constantly recover from damage, they possess very low physical and magical damage output but can do a 1 time burst damage with the cost of half their life and all their mp.\n\n Bonuses: Each spell has better  individual bonuses than other classes.\n\n\n Difficulty:  high\n\n *Make sure to click a class and type a name before you hit the create character button or you will get an error.")
+        info_labtxt.set("The Healer is a class focused on self heals and deals low damage for" \
+        " long term fights. It relies on a steady use of mp to cast restorative spells and protective" \
+        " barriers during combat. While they can constantly recover from damage, they possess very" \
+        " low physical and magical damage output but can do a 1 time burst damage with the cost of" \
+        " half their life and all their mp.\n\n Bonuses: Each spell has a healing bonus which is" \
+        " the MP used multiplied by your current lvl * 1.5 and is applied to every spell\n\n\n" \
+        " Difficulty:  high\n\n")
 
         if gender == "Female":
             #switches the preview img for healer
-            f_healerimg = tk.PhotoImage(file="f_healer.png")
+            f_healerimg = tk.PhotoImage(file="Images/f_healer.png")
             classimgs_lab.config(image=f_healerimg)
             classimgs_lab.image = f_healerimg
 
         else:
             #switches the preview img
-            m_healerimg = tk.PhotoImage(file="m_healer.png")
+            m_healerimg = tk.PhotoImage(file="Images/m_healer.png")
             classimgs_lab.config(
                 text="Class Preview", 
                 image=m_healerimg
@@ -988,7 +1070,7 @@ def characterscreen():
     # --- WARRIOR BUTTON ---
     warrior_btn = tk.Button(
         left_panel, image=warrior_icon, # Replace with your actual warrior image variable
-        text="Warrior", compound="top", width=37, height=50, command=selected_warrior  
+        text="Warrior", compound="top", width=50, height=65, command=selected_warrior  
     )
     warrior_btn.grid(row=0, column=0, padx=5, pady=5)
     warrior_btn.image = warrior_icon # Keeps image from turning white
@@ -996,7 +1078,7 @@ def characterscreen():
     # --- MAGE BUTTON ---
     mage_btn = tk.Button(
         left_panel, image=mage_icon,        # Replace with your actual mage image variable
-        text="Mage", compound="top", width=37, height=50, command=selected_mage   
+        text="Mage", compound="top", width=50, height=65, command=selected_mage   
     )
     mage_btn.grid(row=0, column=1, padx=5, pady=5)
     mage_btn.image = mage_icon
@@ -1007,8 +1089,8 @@ def characterscreen():
         image=healer_icon,      # Replace with your actual healer image variable
         text="Healer", 
         compound="top", 
-        width=37, 
-        height=50,
+        width=50, 
+        height=65,
         command=selected_healer  
     )
     healer_btn.grid(row=1, column=0, padx=5, pady=5)
@@ -1023,7 +1105,7 @@ def mainscreen():
     global numOfFights
 
           #replace background img 
-    mainscreenimg = tk.PhotoImage(file="mainscreen.png")
+    mainscreenimg = tk.PhotoImage(file="Images/mainscreenbg.png")
     mainscreenimg_lab = tk.Label(window, image=mainscreenimg)
     mainscreenimg_lab.place(x=0, y=0, relwidth=1, relheight=1) # relwidth/height=1 stretches it 100%
         #without this it wouldnt load for some reason - directly saving the whole bg 
@@ -1048,13 +1130,13 @@ def mainscreen():
 
         if gender == "Female":
             #switches the preview img for warrior
-            f_warriorimg = tk.PhotoImage(file="f_warrior.png")
+            f_warriorimg = tk.PhotoImage(file="Images/f_warrior.png")
             classimgs_lab.config(image=f_warriorimg)
             classimgs_lab.image = f_warriorimg
 
         else:
             #switches the preview img
-            m_warriorimg = tk.PhotoImage(file="m_warrior.png")
+            m_warriorimg = tk.PhotoImage(file="Images/m_warrior.png")
             classimgs_lab.config(
                 image=m_warriorimg
             )
@@ -1066,13 +1148,13 @@ def mainscreen():
 
         if gender == "Female":
             #switches the preview img for mage
-            f_mageimg = tk.PhotoImage(file="f_mage.png")
+            f_mageimg = tk.PhotoImage(file="Images/f_mage.png")
             classimgs_lab.config(image=f_mageimg)
             classimgs_lab.image = f_mageimg
         
         else:
             #switches the preview img
-            m_mageimg = tk.PhotoImage(file="m_mage.png")
+            m_mageimg = tk.PhotoImage(file="Images/m_mage.png")
             classimgs_lab.config(
                 image=m_mageimg
             )
@@ -1084,12 +1166,12 @@ def mainscreen():
 
         if gender == "Female":
             #switches the preview img for healer
-            f_healerimg = tk.PhotoImage(file="f_healer.png")
+            f_healerimg = tk.PhotoImage(file="Images/f_healer.png")
             classimgs_lab.config(image=f_healerimg)
             classimgs_lab.image = f_healerimg
 
         else: #switches the preview img
-            m_healerimg = tk.PhotoImage(file="m_healer.png")
+            m_healerimg = tk.PhotoImage(file="Images/m_healer.png")
             classimgs_lab.config(image=m_healerimg)
             classimgs_lab.image = m_healerimg
         window.update()
@@ -1315,25 +1397,25 @@ def mainscreen():
             #for chosing monster img
     if monstername == "Hierophant":
 
-        monsterimg = tk.PhotoImage(file="Hierophant.png")
+        monsterimg = tk.PhotoImage(file="Images/Hierophant.png")
         monsterimgs_lab.config(image=monsterimg)
         monsterimgs_lab.image = monsterimg
 
     elif monstername == "Goylca":
 
-        monsterimg = tk.PhotoImage(file="Goylca.png")
+        monsterimg = tk.PhotoImage(file="Images/Goylca.png")
         monsterimgs_lab.config(image=monsterimg)
         monsterimgs_lab.image = monsterimg
         
     elif monstername == "Krosmo Crusher":
 
-        monsterimg = tk.PhotoImage(file="Krosmo Crusher.png")
+        monsterimg = tk.PhotoImage(file="Images/Krosmo Crusher.png")
         monsterimgs_lab.config(image=monsterimg)
         monsterimgs_lab.image = monsterimg
 
     elif monstername == "Bulmar":
 
-        monsterimg = tk.PhotoImage(file="Bulmar.png")
+        monsterimg = tk.PhotoImage(file="Images/Bulmar.png")
         monsterimgs_lab.config(image=monsterimg)
         monsterimgs_lab.image = monsterimg
 
@@ -1401,6 +1483,8 @@ def fightscreen():
     global physical_defence, magical_defence #used when monster is attacking player
     global pressedEndFight
     global fightHpandMpset
+    global gender#this because when creating buttons some genders have different colors than their other gender counterpart
+
 
     #this because of end fight button sends back to fight screen
     if pressedEndFight == False:
@@ -1435,7 +1519,7 @@ def fightscreen():
     #mob fight background
     if monstername == "Bulmar" or "Goylca" or "Hierophant":
 
-        fightscreenimg = tk.PhotoImage(file="mobfightbg.png")
+        fightscreenimg = tk.PhotoImage(file="Images/mobfightbg.png")
         fightscreenimg_lab = tk.Label(window, image=fightscreenimg)
         fightscreenimg_lab.place(x=0, y=0, relwidth=1, relheight=1) # relwidth/height=1 stretches it 100%
             #without this it wouldnt load for some reason - directly saving the whole bg 
@@ -1444,7 +1528,7 @@ def fightscreen():
     #boss fight background
     elif monstername == "Krosmo Crusher":
 
-        fightscreenimg = tk.PhotoImage(file="bossfightbg.png")
+        fightscreenimg = tk.PhotoImage(file="Images/bossfightbg.png")
         fightscreenimg_lab = tk.Label(window, image=fightscreenimg)
         fightscreenimg_lab.place(x=0, y=0, relwidth=1, relheight=1) # relwidth/height=1 stretches it 100%
         #without this it wouldnt load for some reason - directly saving the whole bg 
@@ -1467,19 +1551,19 @@ def fightscreen():
         fightmp_text.set(f"MP: {fightmp}")
 
         fightmp_lab= tk.Label(window, textvariable=fightmp_text, font = ("Ariel", 18, "bold"), fg="black", bg="purple") #compount top basically makes everything stack on top of each other and whatever goes first is at top
-        fightmp_lab.place(relx=0.21, rely=0.75, anchor="center") # "w" anchors it to the West/Left side
+        fightmp_lab.place(relx=0.21, rely=0.77, anchor="center") # "w" anchors it to the West/Left side
         #character image
         if character_selected == "Warrior":
 
             if gender == "Female":
                 #switches the preview img for warrior
-                f_warriorimg = tk.PhotoImage(file="f_warrior.png")
+                f_warriorimg = tk.PhotoImage(file="Images/f_warrior.png")
                 characterimgs_lab.config(image=f_warriorimg)
                 characterimgs_lab.image = f_warriorimg
 
             else:
                 #switches the preview img
-                m_warriorimg = tk.PhotoImage(file="m_warrior.png")
+                m_warriorimg = tk.PhotoImage(file="Images/m_warrior.png")
                 characterimgs_lab.config(
                     image=m_warriorimg
                 )
@@ -1491,13 +1575,13 @@ def fightscreen():
 
             if gender == "Female":
                 #switches the preview img for mage
-                f_mageimg = tk.PhotoImage(file="f_mage.png")
+                f_mageimg = tk.PhotoImage(file="Images/f_mage.png")
                 characterimgs_lab.config(image=f_mageimg)
                 characterimgs_lab.image = f_mageimg
             
             else:
                 #switches the preview img
-                m_mageimg = tk.PhotoImage(file="m_mage.png")
+                m_mageimg = tk.PhotoImage(file="Images/m_mage.png")
                 characterimgs_lab.config(
                     image=m_mageimg
                 )
@@ -1509,12 +1593,12 @@ def fightscreen():
 
             if gender == "Female":
                 #switches the preview img for healer
-                f_healerimg = tk.PhotoImage(file="f_healer.png")
+                f_healerimg = tk.PhotoImage(file="Images/f_healer.png")
                 characterimgs_lab.config(image=f_healerimg)
                 characterimgs_lab.image = f_healerimg
 
             else: #switches the preview img
-                m_healerimg = tk.PhotoImage(file="m_healer.png")
+                m_healerimg = tk.PhotoImage(file="Images/m_healer.png")
                 characterimgs_lab.config(image=m_healerimg)
                 characterimgs_lab.image = m_healerimg
 
@@ -1559,7 +1643,7 @@ def fightscreen():
 
             if monstername == "Hierophant":
 
-                monster_img = tk.PhotoImage(file="Hierophant.png")
+                monster_img = tk.PhotoImage(file="Images/Hierophant.png")
                 monster_imgs_lab.config(image=monster_img)
                 monster_imgs_lab.image = monster_img
 
@@ -1573,7 +1657,7 @@ def fightscreen():
 
             elif monstername == "Goylca":
 
-                monster_img = tk.PhotoImage(file="Goylca.png")
+                monster_img = tk.PhotoImage(file="Images/Goylca.png")
                 monster_imgs_lab.config(image=monster_img)
                 monster_imgs_lab.image = monster_img
 
@@ -1586,7 +1670,7 @@ def fightscreen():
                 
             elif monstername == "Krosmo Crusher":
 
-                monster_img = tk.PhotoImage(file="Krosmo Crusher.png")
+                monster_img = tk.PhotoImage(file="Images/Krosmo Crusher.png")
                 monster_imgs_lab.config(image=monster_img)
                 monster_imgs_lab.image = monster_img
 
@@ -1599,7 +1683,7 @@ def fightscreen():
 
             elif monstername == "Bulmar":
 
-                monster_img = tk.PhotoImage(file="Bulmar.png")
+                monster_img = tk.PhotoImage(file="Images/Bulmar.png")
                 monster_imgs_lab.config(image=monster_img)
                 monster_imgs_lab.image = monster_img
 
@@ -1655,13 +1739,13 @@ def fightscreen():
 
             if gender == "Female":
                 #switches the preview img for warrior
-                turniconimg = tk.PhotoImage(file="f_warrioricon.png")
+                turniconimg = tk.PhotoImage(file="Images/f_warrioricon.png")
                 yourturnimg_lab.config(image=turniconimg)
                 yourturnimg_lab.image = turniconimg
 
             else:
                 #switches the preview img
-                turniconimg = tk.PhotoImage(file="m_warrioricon.png")
+                turniconimg = tk.PhotoImage(file="Images/m_warrioricon.png")
                 yourturnimg_lab.config(image=turniconimg)
                 yourturnimg_lab.image = turniconimg
 
@@ -1671,13 +1755,13 @@ def fightscreen():
 
             if gender == "Female":
                 #switches the preview img for mage
-                turniconimg = tk.PhotoImage(file="f_mageicon.png")
+                turniconimg = tk.PhotoImage(file="Images/f_mageicon.png")
                 yourturnimg_lab.config(image=turniconimg)
                 yourturnimg_lab.image = turniconimg
             
             else:
                 #switches the preview img
-                turniconimg = tk.PhotoImage(file="m_mageicon.png")
+                turniconimg = tk.PhotoImage(file="Images/m_mageicon.png")
                 yourturnimg_lab.config(image=turniconimg)
                 yourturnimg_lab.image = turniconimg
 
@@ -1687,12 +1771,12 @@ def fightscreen():
 
             if gender == "Female":
                 #switches the preview img for healer
-                turniconimg = tk.PhotoImage(file="f_healericon.png")
+                turniconimg = tk.PhotoImage(file="Images/f_healericon.png")
                 yourturnimg_lab.config(image=turniconimg)
                 yourturnimg_lab.image = turniconimg
 
             else: #switches the preview img
-                turniconimg = tk.PhotoImage(file="m_healericon.png")
+                turniconimg = tk.PhotoImage(file="Images/m_healericon.png")
                 yourturnimg_lab.config(image=turniconimg)
                 yourturnimg_lab.image = turniconimg
 
@@ -1876,11 +1960,11 @@ def fightscreen():
     #-----------create spell methods and spell buttons & label/panel----------------
     #create button pannel - should be made above the def above
     try: 
-        spells_panel = tk.Frame(window, bg="purple", bd=2, width=20, height=2)
-        spells_panel.place(relx=0.425, rely=0.8, anchor="center")  
+        spells_panel = tk.Frame(window, bg="purple", bd=2)#, width=20, height=2
+        spells_panel.place(relx=0.5, rely=0.85, anchor="center")  
 
         spellinfo_lab = tk.Label(window, text="", font=("Ariel", 12), fg="black", bg="purple")
-        spellinfo_lab.place(relx=0.5, rely=0.78, anchor="center")
+        spellinfo_lab.place(relx=0.5, rely=0.5, anchor="center")
     except Exception as e:
         print("already made spell info label and panel or ", e)
 
@@ -1904,7 +1988,7 @@ def fightscreen():
         nonlocal player_buffs, monster_debuffs, monster_buffs, player_debuffs
 
         #up here sp the array has the value of mpused
-        mpused = spell["Mp Cost"]
+        mpused = spell["MP Cost"]
         mpdmg = mpused*3 #whenever need to do math with magical dmg only need to assign the valueto   mpused and add mpdmg 
         spelldmg = 0 #its the base spell dmg for every spell
         totaldmg = 0 #the actual dmg that will be dealt
@@ -2313,40 +2397,43 @@ def fightscreen():
             window.update()
     
     def show_spell_info(spell): #shows spell info in label when hovered over.
-        spellinfo_lab.config(text=f"\t\t{spell["Name"]} \n MP Cost: {spell["Mp Cost"]} \nDamage: {spell["Damage"]} \nDescription: {spell["Description"]}", font=("Courier", 12, "bold"), wraplength=500, justify="left", anchor="w")
+        spellinfo_lab.config(image = spellIcon, text=f"\n\n\t\t{spell["Name"]} \n MP Cost: {spell["MP Cost"]} \nDamage: {spell["Damage"]} \nDescription: {spell["Description"]}", font=("Courier", 12, "bold"), wraplength=500, justify="left", anchor="w", compound="top")
          
     def hide_spell_info(event=None): #hides spell info in label.
-        spellinfo_lab.config(text="")
+        spellinfo_lab.config(image = None, text="")
 
     spell_buttons = []
     #need to go back to the array above and include spell pictures and call it spell["Spell Icon"]
     try:
-        if character_selected == "Warrior":       
-            for i, spell in enumerate(warriorspells):
-                btn = tk.Button(spells_panel, image =spell["Spell Icon"], width=14, height=2,
-                                command=lambda s=spell: spellactivation(s))        # click - s=spell is basically saving data in the index of each button - when the button is created each button will have its own lambda so s wont be overwritten - lambda is a function without any code under it, whatever u write next to it ='s its function - the : in s=spell: is basically assigning that variable to whatever comes after: because how in def they cant know information outside of defs, its the same thing. this calls the variable so can also do for ex: spell: spell *2
-                btn.bind("<Enter>", lambda e, s=spell: show_spell_info(s))          # mouse over
-                btn.bind("<Leave>", hide_spell_info)                                # mouse away
-                btn.grid(row=0, column=0 + i, padx=5, pady=5)
-                spell_buttons.append(btn)
+
+        temporaryArray = None # this is a variable so the for loop code wont be repeated
+        if character_selected == "Warrior":
+            #this here because male and warrior spells have different colors, made the male color the base in the array
+            if gender == "Female":
+                warriorspells[0]["Spell Icon"] = "Images/F_Warrior Spell Icons/f_Basic Attack.png"
+                warriorspells[1]["Spell Icon"] = "Images/F_Warrior Spell Icons/f_Strike.png"
+                warriorspells[2]["Spell Icon"] = "Images/F_Warrior Spell Icons/f_Swordsmanship.png"
+                warriorspells[3]["Spell Icon"] = "Images/F_Warrior Spell Icons/f_Warrior's Sword.png"
+                warriorspells[4]["Spell Icon"] = "Images/F_Warrior Spell Icons/f_Advance Shield.png"
+
+            temporaryArray = warriorspells
 
         elif character_selected == "Mage":
-            for i, spell in enumerate(magespells):
-                btn = tk.Button(spells_panel, image =spell["Spell Icon"], text=spell["name"], width=14, height=2,
-                                command=lambda s=spell: spellactivation(s))        # click - s=spell is basically saving data in the index of each button - when the button is created each button will have its own lambda so s wont be overwritten - lambda is a function without any code under it, whatever u write next to it ='s its function - the : in s=spell: is basically assigning that variable to whatever comes after: because how in def they cant know information outside of defs, its the same thing. this calls the variable so can also do for ex: spell: spell *2
-                btn.bind("<Enter>", lambda e, s=spell: show_spell_info(s))          # mouse over
-                btn.bind("<Leave>", hide_spell_info)                                # mouse away
-                btn.grid(row=0, column=0 + i, padx=5, pady=5)
-                spell_buttons.append(btn)
+            temporaryArray = magespells
 
         elif character_selected == "Healer":
-            for i, spell in enumerate(healerspells):
-                btn = tk.Button(spells_panel, image =spell["Spell Icon"], text=spell["name"], width=14, height=2,
-                                command=lambda s=spell: spellactivation(s))        # click - s=spell is basically saving data in the index of each button - when the button is created each button will have its own lambda so s wont be overwritten - lambda is a function without any code under it, whatever u write next to it ='s its function - the : in s=spell: is basically assigning that variable to whatever comes after: because how in def they cant know information outside of defs, its the same thing. this calls the variable so can also do for ex: spell: spell *2
-                btn.bind("<Enter>", lambda e, s=spell: show_spell_info(s))          # mouse over
-                btn.bind("<Leave>", hide_spell_info)                                # mouse away
-                btn.grid(row=0, column=0 + i, padx=5, pady=5)
-                spell_buttons.append(btn)
+            temporaryArray = healerspells
+
+        for i, spell in enumerate(temporaryArray):
+            spellIcon = tk.PhotoImage(file=spell["Spell Icon"])
+
+            btn = tk.Button(spells_panel, image =spellIcon, width=50, height=60,
+                            command=lambda s=spell: spellactivation(s))        # click - s=spell is basically saving data in the index of each button - when the button is created each button will have its own lambda so s wont be overwritten - lambda is a function without any code under it, whatever u write next to it ='s its function - the : in s=spell: is basically assigning that variable to whatever comes after: because how in def they cant know information outside of defs, its the same thing. this calls the variable so can also do for ex: spell: spell *2
+            btn.image = spellIcon #without this button disappears
+            btn.bind("<Enter>", lambda e, s=spell: show_spell_info(s))          # mouse over
+            btn.bind("<Leave>", hide_spell_info)                                # mouse away
+            btn.grid(row=0, column=0 + i, padx=5, pady=5)
+            spell_buttons.append(btn)
 
     except Exception as e:
         print("Spell buttons already exist", e)
@@ -2392,25 +2479,25 @@ def fightscreen():
         #thi changes the turn icon from character img to monster img so you know its tthe monsters turn.
         if monstername == "Hierophant":
 
-            monster_imgicon = tk.PhotoImage(file="Hierophanticon.png")
+            monster_imgicon = tk.PhotoImage(file="Images/Hierophant_icon.png")
             yourturnimg_lab.config(image=monster_img)
             yourturnimg_lab.image = monster_imgicon
 
         elif monstername == "Goylca":
 
-            monster_imgicon = tk.PhotoImage(file="Goylca_icon.png")
+            monster_imgicon = tk.PhotoImage(file="Images/Goylca_icon.png")
             yourturnimg_lab.config(image=monster_imgicon)
             yourturnimg_lab.image = monster_imgicon
             
         elif monstername == "Krosmo Crusher":
 
-            monster_imgicon = tk.PhotoImage(file="Krosmo Crushericon.png")
+            monster_imgicon = tk.PhotoImage(file="Images/Krosmo Crushericon.png")
             yourturnimg_lab.config(image=monster_imgicon)
             yourturnimg_lab.image = monster_imgicon
 
         elif monstername == "Bulmar":
 
-            monster_imgicon = tk.PhotoImage(file="Bulmaricon.png")
+            monster_imgicon = tk.PhotoImage(file="Images/Bulmaricon.png")
             yourturnimg_lab.config(image=monster_imgicon)
             yourturnimg_lab.image = monster_imgicon
 
@@ -2475,7 +2562,6 @@ def fightscreen():
 
         timerExists = False #used to check if the timer exists or not - if it does then it will be destroyed and a new one will be created
         fighthp -= 1 #this is here for radiation, at start of turn player loses 1 hp - will add a check if it kills user  
-        fightmp += 1 #every turn they get 1 mp
         variablesUpdate()#updates hp - check if radiation would end the fight           
         window.update()
         
@@ -2490,13 +2576,13 @@ def fightscreen():
 
                 if gender == "Female":
                     #switches the preview img for warrior
-                    turniconimg = tk.PhotoImage(file="f_warrioricon.png")
+                    turniconimg = tk.PhotoImage(file="Images/f_warrioricon.png")
                     yourturnimg_lab.config(image=turniconimg)
                     yourturnimg_lab.image = turniconimg
 
                 else:
                     #switches the preview img
-                    turniconimg = tk.PhotoImage(file="m_warrioricon.png")
+                    turniconimg = tk.PhotoImage(file="Images/m_warrioricon.png")
                     yourturnimg_lab.config(image=turniconimg)
                     yourturnimg_lab.image = turniconimg
 
@@ -2506,13 +2592,13 @@ def fightscreen():
 
                 if gender == "Female":
                     #switches the preview img for mage
-                    turniconimg = tk.PhotoImage(file="f_mageicon.png")
+                    turniconimg = tk.PhotoImage(file="Images/f_mageicon.png")
                     yourturnimg_lab.config(image=turniconimg)
                     yourturnimg_lab.image = turniconimg
                     
                 else:
                     #switches the preview img
-                    turniconimg = tk.PhotoImage(file="m_mageicon.png")
+                    turniconimg = tk.PhotoImage(file="Images/m_mageicon.png")
                     yourturnimg_lab.config(image=turniconimg)
                     yourturnimg_lab.image = turniconimg
 
@@ -2522,12 +2608,12 @@ def fightscreen():
 
                 if gender == "Female":
                     #switches the preview img for healer
-                    turniconimg = tk.PhotoImage(file="f_healericon.png")
+                    turniconimg = tk.PhotoImage(file="Images/f_healericon.png")
                     yourturnimg_lab.config(image=turniconimg)
                     yourturnimg_lab.image = turniconimg
 
                 else: #switches the preview img
-                    turniconimg = tk.PhotoImage(file="m_healericon.png")
+                    turniconimg = tk.PhotoImage(file="Images/m_healericon.png")
                     yourturnimg_lab.config(image=turniconimg)
                     yourturnimg_lab.image = turniconimg
 
@@ -2556,7 +2642,7 @@ def fightscreen():
 
         #check monter stats 
         monsterstats_but = tk.Button(window, text="Monster Stats", bg="#00A8FF", font=("Ariel", 16, "bold"), command=monsterStatsWindow, bd=2, width=11, height=2)
-        monsterstats_but.place(relx=0.22, rely=0.95, relheight=0.07, relwidth=0.11, anchor="center")
+        monsterstats_but.place(relx=0.225, rely=0.95, relheight=0.07, relwidth=0.11, anchor="center")
 
     except Exception as e:
         print("Already made general buttons or ", e)
