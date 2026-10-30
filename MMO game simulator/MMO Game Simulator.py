@@ -22,16 +22,16 @@ import random
 14. include the spell bonus descriptions in fightscreen and main screen
 15. edit code to include a tutorial
 
-        #Make new button called player stats that will have shield and mp and regular stats from stat window - and delete mp label
+        #Make new button called player stats that will have shield and mp and regular stats from stat window -
         #need to add shield to monster stats window
         #need to make shields update in variable updates - can include the original set in the if at top
-        #want to show mp for monster  - label      
         #need to edit stats and monster window to include that physical or magical defence /2 is subtracted by dmg
-        #need to make monster spells
-        #found a bug where if press end turn too fast the game will freeze for a ec then the timer will go up drammatically past 90 and turn will go up by 1 every second
+        #found a bug where if press end turn too fast the game will freeze for a ec then the timer will go up drammatically past 90 and turn will go up by 1 every second - when monster turn is added wont always trigger but still should fix it
         #also if press end turn when u have 1 hp will cause a bug that will make you keep going from fight screen to main screen back n forth. - to fix this should put an hp check in end turn so monster turn will never start
         #currently i think even if win monster stats wont increase so need to check on this
         #currently count down keeps counting even after the fight has ended, its not being destroyed properly
+
+        #need to make monster spells
         
         plan for now, get everything to work calculation and logic wise, then im going to go back in and add animations
             1. finish spell calculations
@@ -1546,12 +1546,13 @@ def fightscreen():
         characterimgs_lab= tk.Label(window, image=None, bg="purple")
         characterimgs_lab.place(relx=0.21, rely=0.55, anchor="center") # "w" anchors it to the West/Left side  
 
-        #label for mp
+        #label for player mp mp
         fightmp_text = tk.StringVar()
         fightmp_text.set(f"MP: {fightmp}")
 
         fightmp_lab= tk.Label(window, textvariable=fightmp_text, font = ("Ariel", 18, "bold"), fg="black", bg="purple") #compount top basically makes everything stack on top of each other and whatever goes first is at top
         fightmp_lab.place(relx=0.21, rely=0.77, anchor="center") # "w" anchors it to the West/Left side
+
         #character image
         if character_selected == "Warrior":
 
@@ -1700,6 +1701,10 @@ def fightscreen():
 
     #----------------------------basic display labels-----------------------------
     
+        #monster mp label- label     - the variable is already made directy above in previous portion  - theres also another version of this in the monster stats window
+        mmp_lab= tk.Label(window, textvariable=mmp_text, font = ("Ariel", 18, "bold"), fg="black", bg="purple") #compount top basically makes everything stack on top of each other and whatever goes first is at top
+        mmp_lab.place(relx=0.75, rely=0.9, anchor="center") # "w" anchors it to the West/Left side
+
         #label for the character hp
         hplab_text = tk.StringVar()
         hplab_text.set(f"{fighthp}")
@@ -1892,9 +1897,9 @@ def fightscreen():
         mhp_label = tk.Label(stats_panel, text=f"HP: {mhp}", fg="white", bg="black", font=("Courier", 14, "bold"))
         mhp_label.grid(row=0, column=0, padx=5, pady=5)
 
-        #mmp label
-        mmp_label = tk.Label(stats_panel, text=f"MP: {mmp_text}", fg="white", bg="black", font=("Courier", 14, "bold"))
-        mmp_label.grid(row=1, column=0, padx=5, pady=5)
+        #mmp label for stats window
+        mmp_statsWindow_label = tk.Label(stats_panel, text=f"MP: {mmp_text}", fg="white", bg="black", font=("Courier", 14, "bold"))
+        mmp_statsWindow_label.grid(row=1, column=0, padx=5, pady=5)
 
         #mphysical dmg label
         mmphysical_dmg_label = tk.Label(stats_panel, text=f"Physical Damage: {mphysical_dmg}", fg="white", bg="black", font=("Courier", 14, "bold"))
@@ -1928,20 +1933,30 @@ def fightscreen():
         #timer label - fight will have a timer of 60 seconds, can increase if they play fast, timer will start automatically - the number will be changed in the loop
             #the if is for checking if the label already exists so it doesnt create duplicates
         if timerExists == False:
+            if timer > 90:
+                timer = 90 #this caps the timer at 90 seconds
+
             timerlab_text = tk.StringVar()
             timerlab_text.set(f"{timer}")
             timer_lab= tk.Label(window, textvariable=f"{timerlab_text}", font = ("Ariel", 24, "bold"), fg="black", bg="purple")
             timer_lab.place(relx=0.5, rely=0.1, relwidth=0.1, relheight=0.1, anchor="center")
 
         if pressedEndTurn == True: #this is to properly destroy countdown timer if player presses end turn button instead of waiting for the timer to run out - if this is true then the timer will be destroyed and a new one will be created
-            timer_lab.destroy() #destroys the timer label when it reaches 0
+            try:
+                timer_lab.destroy() #destroys the timer label when it reaches 0
+            except Exception as e:
+                print(e)
+
             timerExists = False
             pressedEndTurn = False # this resets the end turn codition for the next turn
 
         #this is here for end fight procedures - need to destroy timer label
         if fighthp <= 0 or mhp <= 0:
             if timerExists == True:
-                timer_lab.destroy() #destroys the timer label when it reaches 0
+                try:
+                    timer_lab.destroy() #destroys the timer label when it reaches 0
+                except Exception as e:
+                    print(e)
                 timerExists = False
             end_fight() #makes it complete end fight procedures.
 
@@ -1950,8 +1965,12 @@ def fightscreen():
             timer -= 1
             oneSecondCountdown = window.after(1000, countdown) #this repeats the countdown function every 1 second so can make it count down
 
-        else: 
-            timer_lab.destroy() #destroys the timer label when it reaches 0
+        else:
+            try:
+                timer_lab.destroy() #destroys the timer label when it reaches 0
+            except Exception as e:
+                print(e) 
+
             timerExists = False
             monster_turn() #makes it switch to monster turn when timer reaches 0
         
@@ -2436,7 +2455,7 @@ def fightscreen():
             spell_buttons.append(btn)
 
     except Exception as e:
-        print("Spell buttons already exist", e)
+        print("Spell buttons already exist or ", e)
         #---------------------------------------------turn defs---------------------------------------------------------------------------
     
     def end_turn():
@@ -2502,15 +2521,16 @@ def fightscreen():
             yourturnimg_lab.image = monster_imgicon
 
             # for when the player makes the mp go into negative it buffs monster and monster skips turn
-        
+
         if mmp < 0: #for if the player makes the mp go into negative it buffs monster
             mmp = 0
             mmp +=20
             mmagical_dmg*2
             mphysical_dmg*2
 
-        else:                  #attacks - will also include function where if monster kills player it will end fight/ - going to make monster spells in a loop - will make it do 3 attacks per turn or until it runs out of mp - was going to do a turn thing where thain gain dmg on dif turns but think will switch it to they gain damage depending on how many attacks they do so for example if the dmg count is 9 they gain dmg/spell dmg
+        else:                  #attacks - will also include function where if monster kills player it will end fight/ - going to make monster spells in a loop - will make it do 1-3 attacks per turn or until it runs out of mp - was going to do a turn thing where thain gain dmg on dif turns but think will switch it to they gain damage depending on how many attacks they do so for example if the dmg count is 9 they gain dmg/spell dmg
 
+                #going to change the if else so that they gain dmg first, gain mp, then they gain turn mp such as +9, monsters will only cast 1-3 spells per turn so will need a counter to make sure it doesnt exceed 3
                 #when doing dmg calculation take its basically copy and paste from spellactivatgion
                 #could also include the monster def actions, such as him hitting the player
                 """
