@@ -19,6 +19,7 @@ import random
 12. make the game be able to save a game instance associated with a login/pass - would probably make an automatic save in loading page or whatever button you click before switching pages and then another save upon logging out
 14. include the spell bonus descriptions in fightscreen and main screen
 13. make login page activate with enter instead of just click
+14. need to edit the you have lost fight pop up in main screen, only shows that in error part, want it in message part too.
 15. edit code to include a tutorial
 
         #Make new button called player stats that will have shield and mp and regular stats from stat window -
@@ -26,10 +27,7 @@ import random
         #need to make shields update in variable updates - can include the original set in the if at top
         #need to nerf warriors mpgain from 2 to 1 i thin, they basically gain infite mp.
         #need to redit the print spells, if a spell does damage to a shield it only says -100 for example. and not that the shield lost points, also should include -hp instead of leaving it open while we're at it
-
-        #everything is no longer being destroyed properly - thought it would be destroyed even if put everything in the end fight def - need to rework this
-            fight has ended was being printed endlessly for some reason
-            everything that was created in fight screen didn't get destroyed 
+        #might edit labels to where if hover over the monster/player image it will show stats portion instead of having buttons. 
 
         #need to test all spells to make sure they work - currently only testing warrior spells 
             - the first spell is causing -- instead of just - in the print log
@@ -38,10 +36,10 @@ import random
                                                         ^^^^^^^^^^
                                                       TypeError: '>' not supported between instances of 'str' and 'int'
 
+        #i made a function that destroys evert widget, going to put that in the other defs so i dont have to repeat .destroy                            
+                
         #currently i think even if win monster stats wont increase so need to check on this- might need to edit it where the array is constant being remade in different defs
-        #currently count down keeps counting even after the fight has ended, its not being destroyed properly
         #the damage the array shows will never be right until i add spell calculations so need to figure out how i want to show people the spell damage because if they cast the spell and the damamge is lower that would suck
-
         
             1. fix everything bug wise
             2.Animations - 
@@ -123,6 +121,7 @@ fightHpandMpset = False #used when determining if hp and mp was already set to t
 
 timenow = datetime.now().strftime("%H:%M:%S") #here so i can use it whenever
 
+screenName =""#used for destroying screens in clearWindow
 
 monsters = [
     {#strong magic but phyically weak
@@ -295,6 +294,12 @@ fightstatus = None #will be updated to empty(no fight is happening), fight start
 fightWon = False #this is to tell if fight was won or not, seperate from fight status
 numOfFights = 0 #just a personal status later on for people who will want to know how many fights they did.
 
+#for destroying everything in windows, doesnt work on images
+def clearWindow():
+    global screenName
+    if screenName == "fightscreen":
+        for widget in window.fightscreen():
+            widget.destroy()
 #-----------------------------------main window----------------------------------
 #Create Window
 window = tk.Tk()
@@ -1495,11 +1500,8 @@ def fightscreen():
     global currentlvl
     global name
     global monsters
-    global hp
-    global mp
-    global basedmg
-    global currentexp
-    global pastlvl
+    global hp, mp, basedmg, currentexp, pastlvl
+    global screenName
     global expneeded
     global fightstatus
     global timer
@@ -1507,6 +1509,8 @@ def fightscreen():
     global pressedEndFight
     global fightHpandMpset
     global gender#this because when creating buttons some genders have different colors than their other gender counterpart
+
+    screenName = "fightscreen"
 
     #this because of end fight button sends back to fight screen
     if pressedEndFight == False:
@@ -1867,30 +1871,7 @@ def fightscreen():
                         window.after_cancel(after_id)
                 except Exception as e:
                     print ("There are no countdowns, or", e)
-
-            endfight_but.destroy()
-            endturn_but.destroy()
-            monsterstats_but.destroy()
-            yourturnimg_lab.destroy()
-            fightlog_box.destroy()
-            mname_lab.destroy()
-            mhp_lab.destroy()
-            characterimgs_lab.destroy()
-            name_lab.destroy() 
-            hp_lab.destroy()
-            turn_lab.destroy()
-            spellinfo_lab.destroy()
-            spells_panel.destroy()
-
-            try: 
-                timer_lab.destroy() #might nto always destroy because i've set it to destroy in multiple places, the try is so doesnt crash anything
-            except Exception as e:
-                pass #if fails its because timer already exists
-
-            for b in spell_buttons:
-                b.destroy()
-                spell_buttons.clear()                  # empties the list so it doesn't hold dead buttons
-
+            clearWindow()
             fightHpandMpset == False # this is set because need this so that the current hp of the monster and fighter dont change when i send it back to fight screen
             end_fight()
 
