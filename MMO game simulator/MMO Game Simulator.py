@@ -25,23 +25,21 @@ import random
         #Make new button called player stats that will have shield and mp and regular stats from stat window -
         #need to add shield to monster stats window
         #need to make shields update in variable updates - can include the original set in the if at top
-        #need to nerf warriors mpgain from 2 to 1 i thin, they basically gain infite mp.
         #need to redit the print spells, if a spell does damage to a shield it only says -100 for example. and not that the shield lost points, also should include -hp instead of leaving it open while we're at it
         #might edit labels to where if hover over the monster/player image it will show stats portion instead of having buttons. 
+        #i made a function that destroys evert widget, going to put that in the other defs so i dont have to repeat .destroy                            
+
+        Fixed an error for spells that uses all mp. the value of the mp wasn't being resetted so it caused an error.
 
         #need to test all spells to make sure they work - currently only testing warrior spells 
             - the first spell is causing -- instead of just - in the print log
             - noticed monster hp not decreasing even after casting a spell - need to check hp variable updates
-            - got an error in spell activation -     if mpused > 0: #checks if the mpused is above 0 for mp dmg
-                                                        ^^^^^^^^^^
-                                                      TypeError: '>' not supported between instances of 'str' and 'int'
 
-        #i made a function that destroys evert widget, going to put that in the other defs so i dont have to repeat .destroy                            
-                
-        #currently i think even if win monster stats wont increase so need to check on this- might need to edit it where the array is constant being remade in different defs
+        #currently even if you do enough damage a fight can't be won - i think its because of the monster hp isn't being checked properly (dont think its just the message box telling me i lost because my lvl didn't change or anything, but also didnt check my exp)             
+        #currently i think even if win monster stats wont increase so need to check on this- might need to edit it where the array is constant being remade in different defs - actually rethought it and would only have to recast it in main screen, and might change the variable to where its initialized and then make a spell array def and have it be called out immediately
         #the damage the array shows will never be right until i add spell calculations so need to figure out how i want to show people the spell damage because if they cast the spell and the damamge is lower that would suck
         
-            1. fix everything bug wise
+            1. fix everything bug wise during the fight
             2.Animations - 
                 think will make another def called spell animations so that animations can be called with whatever character
                 when come back to do animations for spells make a variable called mpchange for the label) and add it at the start of spell activationa nd it will change depending on the spell - and maybe have to make another variable for spells that take all mp, perhaps called currentmp or expectedmploss
@@ -54,18 +52,18 @@ import random
                         might need to make a variable that counts the animation times and everytime a spell is activated the number for that goes up and it is reduced during the .after the animation calls for
         
             3. Button deactivation - 
-                thinking of making it a def  and before countdown def and call it in countdown - and what it will basically do is if go ahead and make a variable (not character turn because that can bug, perhaps will be like a boolean - basically it will be a variable to check if its already called or not, can add more conditions in monster def), and if character turn = true then it will call the def to check to deactivate buttons with a .after, and inside the def will be another .after to check it again - make sure to also make a character turn variable so when its monster turn this stops activating - will make an if with that
-                need to include an if for when when fightmp < MP Cost so spell doesnt activate #currently will make it not activate and show an error message but later on when im deactivating buttons will make it deactivate the button - or maybe do both just in case
-                    can also be at the at the start of turn and a check in variableupdate maybe so that buttons can be dactivated properly if dont have enough mp
-                        can also include like a inside of this spell count because i want to limit the number of use for each spell - each spell will have their own count so will see - afterwards would need to start including the spell counts in the spell descriptions 
-                going to make a variable to determine if monster turn or character turn, a boolean- think this will be used for deactivating buttons and much more - if cant figure it out can include an if for where if not your turn will get a popup telling you its not your turn and you cant cast spells (might include this as a backup even if it originally works) and nothing else happens
-                need to make it where when turn ends it deactivates all buttons, also in the if not turn 1, can also reactivate all buttons - after that can make another if cooldown != 0 deactivates again
+                make a def - its going to be like a check - will check if character/monster turn through the created variables (will place the def at start of character/monster turn, and after spell kill check) it will check if how much mp you have and deactivate buttons accordingly
+                    - if character turn will make a try to reactivate all buttons(could also just use turn variable if turn >= 2 reactivate) then deactivate buttons you dont have enough mp for
+                    - if monster turn will deactivate all buttons
 
-            4. cooldowns
+            4.  can also include like a inside of this spell count because i want to limit the number of use for each spell - each spell will have their own count so will see - afterwards would need to start including the spell counts in the spell descriptions 
+                need to make it where when turn ends it deactivates all buttons, also in the if not turn 1, can also reactivate all buttons - after that can make another if cooldown != 0 deactivates again  
+
+            5. cooldowns
                 i didnt add cooldowns yet but will do it soon - might need to add new variable called cooldown for spell functions, if cooldown != 0 then will automatically deactivate the button at the start of the def- might make a small label that pops up for buttons with cooldowns, will just display "0/1/2"
 
-            5. Monster 
-                #after that going to go ahead and do the monster attack and animations, character stuff will be copying and pasting from ehre and will be much more work
+            6. Monster 
+                #after that going to go ahead and do animations, character stuff will be copying and pasting from ehre and will be much more work
     
 17. need to include more tips- also want to edit it abit because i think i have extra codes , could just try appending based on class - 
     - for each spell a monster cast after a certain ammount of attacks they will gain dmg due to radiation
@@ -2125,21 +2123,27 @@ def fightscreen():
                 else:
                     break
 
-        #switched the variable like this because cant compare strings
-        if spell["MP Cost"] == "100%":
-            temporarympcost = fightmp
-        else: 
-            temporarympcost = spell["MP Cost"]
+        #switched the variable like this because cant compare strings and in my description I use 100% as a placeholder for the fighters current mp - also if i change spell cost directly it causes the buttons descriptions to change and causes other errors
+
+        if spell["MP Cost"] == "100%": 
+            temporaryMpCost = fightmp
+
+            #this was remade to reset the values
+            mpused = temporaryMpCost
+            mpdmg = mpused*3 
+        else:
+            temporaryMpCost = spell["MP Cost"]
 
         #this is just to check to see if have enough mp to even use the spell
-        if fightmp < temporarympcost:
+        if fightmp < temporaryMpCost:
             messagebox.showerror("Error", "You Do Not Have Enough Mp")
 
         else: 
-
             #--------------------this calculates actual total dmg and will also do animations in the future
-            if spell["MP Cost"] != "100%":
-                fightmp -= spell["MP Cost"]
+            if temporaryMpCost != "100%":
+                fightmp -= temporaryMpCost
+            else:
+                print("MP Cost wasn't converted to an int.")
 
             if character_selected == "Warrior":
                 #warrior spell bonus was calculated in totaldmgcalculations()
@@ -2241,7 +2245,7 @@ def fightscreen():
                     playershield += round(random.uniform(totaldmg / 2, totaldmg), 1) #the 1 at the end is the number of decimal places to keep, round is only making it round that 1 decimal to hgihest number
         
             elif character_selected == "Mage":
-                mpdmg = (mpused + (spell["MP Cost"]/2))*3
+                mpdmg = (mpused + (temporaryMpCost/2))*3
                 #holds the spell dmg calculations
 
                 totaldmgcalculations()
@@ -2270,7 +2274,7 @@ def fightscreen():
 
                 elif spell["Name"] == "MP Drain":
 
-                    totaldmg -= (mpused + (spell["MP Cost"]/2))*3#this here because the dmg calculations added more dmg, this spell only supossed to do slight damage
+                    totaldmg -= (mpused + (temporaryMpCost/2))*3#this here because the dmg calculations added more dmg, this spell only supossed to do slight damage
                     if monstershield > 0 and totaldmg > monstershield:
                         totaldmg - monstershield
                         shieldloss = monstershield #will be used for animations
