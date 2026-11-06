@@ -6,40 +6,44 @@ import time
 import random
 """this i want to fix- will do these later on, not pressing issues
 1. loading page-  want to make the labels in here a bit bigger so no1 strains to see
-4. tutorial - maybe can use the label i created
 5. add music
 6 clean up code proccess, move my global code to below, move my configures to the bottoms, make some of my repeatable code functions.
     might try to make classes as they can remove unnecasarry variables
-7.    # if want to make gear would have to put 1 which monster drops what gear, how would character equip them, and an array that holds the information of the gears - could make the database work into this too. will use the dropdown to do determine that gear drop rates
-    want to somehow encrypt my code so that people cant see it
-    later on if decide to save information can just save the information from the variables and also include a portion where it updates the database in loading page - when i login can make an if and will take the stats saved in the database and make the variables = to that
-8. add restrictions on names so that can use profanity languages will use .upper so that regardless of upper or lowercase can still flag it -- will probably make a new variable like nameProfanitycheck = name.upper() then will use an if - will assign this to the create character button
-9. will need to replace class imgs - doesnt match with monsters
+7. add restrictions on names so that can use profanity languages will use .upper so that regardless of upper or lowercase can still flag it -- will probably make a new variable like nameProfanitycheck = name.upper() then will use an if - will assign this to the create character button
 10. create a logout button
 12. make the game be able to save a game instance associated with a login/pass - would probably make an automatic save in loading page or whatever button you click before switching pages and then another save upon logging out
-14. include the spell bonus descriptions in fightscreen and main screen
+    want to somehow encrypt my code so that people cant see it
+    later on if decide to save information can just save the information from the variables and also include a portion where it updates the database in loading page - when i login can make an if and will take the stats saved in the database and make the variables = to that
 13. make login page activate with enter instead of just click
-14. need to edit the you have lost fight pop up in main screen, only shows that in error part, want it in message part too.
 15. edit code to include a tutorial
 
+        #need to edit the you have lost fight pop up in main screen, only shows that in error part, want it in message part too.
+        #include the spell bonus descriptions in fightscreen and main screen
         #Make new button called player stats that will have shield and mp and regular stats from stat window -
         #need to add shield to monster stats window
         #need to make shields update in variable updates - can include the original set in the if at top
         #need to redit the print spells, if a spell does damage to a shield it only says -100 for example. and not that the shield lost points, also should include -hp instead of leaving it open while we're at it
         #might edit labels to where if hover over the monster/player image it will show stats portion instead of having buttons. 
         #i made a function that destroys evert widget, going to put that in the other defs so i dont have to repeat .destroy                            
+        #for spell activation could make a def for the spells so the same info isnt repeated
+        
+        #need to test all spells to make sure they work - test mage spells next
+         #after finish testing spells going to put the clear window function where they need to be because loading page widgets arent being destroyed properly.
 
-        Fixed an error for spells that uses all mp. the value of the mp wasn't being resetted so it caused an error.
+         Warrior spell testing is finally complete, every spell works as intended.
+         Fixed monster hp not decreasing. Fights can now end properly.
 
-        #need to test all spells to make sure they work - currently only testing warrior spells 
-            - the first spell is causing -- instead of just - in the print log
-            - noticed monster hp not decreasing even after casting a spell - need to check hp variable updates
-
-        #currently even if you do enough damage a fight can't be won - i think its because of the monster hp isn't being checked properly (dont think its just the message box telling me i lost because my lvl didn't change or anything, but also didnt check my exp)             
+         #the monster mp label has an issue, i think need to try moving it for now    - also migt be because im not sure if i ever gave mmp an initial value so it might just be showing blank
         #currently i think even if win monster stats wont increase so need to check on this- might need to edit it where the array is constant being remade in different defs - actually rethought it and would only have to recast it in main screen, and might change the variable to where its initialized and then make a spell array def and have it be called out immediately
         #the damage the array shows will never be right until i add spell calculations so need to figure out how i want to show people the spell damage because if they cast the spell and the damamge is lower that would suck
-        
-            1. fix everything bug wise during the fight
+        #even if you win and when you're supossed to get a lvl up the exp value does change but the other stats dont, lvl aside i think its because need to reissue the array
+
+            1. fix everything bug wise during and after the fight
+                - fix spells
+                -then fix after fight mechanics
+
+            2. Do all the other little things that i wanted to add and fix to the fight that has #'s
+
             2.Animations - 
                 think will make another def called spell animations so that animations can be called with whatever character
                 when come back to do animations for spells make a variable called mpchange for the label) and add it at the start of spell activationa nd it will change depending on the spell - and maybe have to make another variable for spells that take all mp, perhaps called currentmp or expectedmploss
@@ -2123,6 +2127,10 @@ def fightscreen():
                 else:
                     break
 
+            #this is here because sometimes the total damage will be way below 0 resulting in the spell healing the monster
+            if totaldmg < 0:
+                totaldmg = 0
+
         #switched the variable like this because cant compare strings and in my description I use 100% as a placeholder for the fighters current mp - also if i change spell cost directly it causes the buttons descriptions to change and causes other errors
 
         if spell["MP Cost"] == "100%": 
@@ -2154,90 +2162,93 @@ def fightscreen():
                     
                     if monstershield > 0 and totaldmg > monstershield:
                         totaldmg - monstershield
-                        shieldloss = monstershield #shield lost will be used for animations
+                        monsterShieldLoss = monstershield #shield lost will be used for animations
                         monstershield = 0
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                     elif monstershield > 0 and monstershield > totaldmg:
-                        shieldloss = totaldmg 
+                        monsterShieldLoss = totaldmg 
                         monstershield = monstershield - totaldmg
                         
                     elif monstershield == 0:                    
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                     fightmp += 2 
 
                 elif spell["Name"] == "Strike":
                     if monstershield > 0 and totaldmg > monstershield:
                         totaldmg - monstershield
-                        shieldloss = monstershield #shield lost will be used for animations
+                        monsterShieldLoss = monstershield #shield lost will be used for animations
                         monstershield = 0
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                     elif monstershield > 0 and monstershield > totaldmg:
-                        shieldloss = totaldmg 
+                        monsterShieldLoss = totaldmg 
                         monstershield = monstershield - totaldmg
 
                     elif monstershield == 0:                    
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                     fightmp += 2 
                     
                 elif spell["Name"] == "Swordsmanship":
                     if monstershield > 0 and totaldmg > monstershield:
-                        totaldmg - monstershield
-                        shieldloss = monstershield #shield lost will be used for animations
+                        totaldmg -= monstershield
+                        monsterShieldLoss = monstershield #shield lost will be used for animations
                         monstershield = 0
                         monsterHpLoss = mhp - totaldmg
+                        mhp -= totaldmg
+
 
                     elif monstershield > 0 and monstershield > totaldmg:
-                        shieldloss = totaldmg 
+                        monsterShieldLoss = totaldmg 
                         monstershield = monstershield - totaldmg
 
                     elif monstershield == 0:                    
                         monsterHpLoss = mhp - totaldmg
+                        mhp -= totaldmg
 
                     fightmp += 2 
 
-                elif spell["Name"] == "Warrior’s Sword":
+                elif spell["Name"] == "Warrior's Sword":
                     fightmp = 0
 
                     if monstershield > 0 and totaldmg > monstershield:
                         totaldmg - monstershield
-                        shieldloss = monstershield #shield lost will be used for animations
+                        monsterShieldLoss = monstershield #shield lost will be used for animations
                         monstershield = 0
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
                         
                     elif monstershield > 0 and monstershield > totaldmg:
-                        shieldloss = totaldmg 
+                        monsterShieldLoss = totaldmg 
                         monstershield = monstershield - totaldmg
                         
                     elif monstershield == 0:                    
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
     
                     fightmp += 2 
 
                 elif spell["Name"] == "Advance Shield":                
                     if monstershield > 0 and totaldmg > monstershield:
                         totaldmg - monstershield
-                        shieldloss = monstershield #shield lost will be used for animations
+                        monsterShieldLoss = monstershield #shield lost will be used for animations
                         monstershield = 0
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                     elif monstershield > 0 and monstershield > totaldmg:
-                        shieldloss = totaldmg 
+                        monsterShieldLoss = totaldmg 
                         monstershield = monstershield - totaldmg
                         
                     elif monstershield == 0:                    
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
                     
                     fightmp += 2 
 
@@ -2252,22 +2263,22 @@ def fightscreen():
                 if spell["Name"] == "Staff Attack":
                     if monstershield > 0 and totaldmg > monstershield:
                         totaldmg - monstershield
-                        shieldloss = monstershield #shield lost will be used for animations
+                        monsterShieldLoss = monstershield #shield lost will be used for animations
                         monstershield = 0
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                         fightmp += 3 
 
                     elif monstershield > 0 and monstershield > totaldmg:
-                        shieldloss = totaldmg 
+                        monsterShieldLoss = totaldmg 
                         monstershield = monstershield - totaldmg
                         
                         fightmp += 3 
 
                     elif monstershield == 0:                    
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
                         fightmp += 3 
     
                     variablesUpdate()
@@ -2277,17 +2288,17 @@ def fightscreen():
                     totaldmg -= (mpused + (temporaryMpCost/2))*3#this here because the dmg calculations added more dmg, this spell only supossed to do slight damage
                     if monstershield > 0 and totaldmg > monstershield:
                         totaldmg - monstershield
-                        shieldloss = monstershield #will be used for animations
+                        monsterShieldLoss = monstershield #will be used for animations
                         monstershield = 0
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                         mploss = random.randint(3, 9)
                         mmp - mploss
                         fightmp += mploss 
 
                     elif monstershield > 0 and monstershield > totaldmg:
-                        shieldloss = totaldmg 
+                        monsterShieldLoss = totaldmg 
                         monstershield = monstershield - totaldmg
                         
                         mploss = random.randint(3, 9)
@@ -2296,7 +2307,7 @@ def fightscreen():
 
                     elif monstershield == 0:                    
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                         mploss = random.randint(3, 9)
                         mmp - mploss
@@ -2305,38 +2316,38 @@ def fightscreen():
                 elif spell["Name"] == "HP Drain":
                     if monstershield > 0 and totaldmg > monstershield:
                         totaldmg - monstershield
-                        shieldloss = monstershield #shield lost will be used for animations
+                        monsterShieldLoss = monstershield #shield lost will be used for animations
                         monstershield = 0
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                         fighthp += monsterHpLoss
 
                     elif monstershield > 0 and monstershield > totaldmg:
-                        shieldloss = totaldmg 
+                        monsterShieldLoss = totaldmg 
                         monstershield = monstershield - totaldmg
                         fighthp += monsterHpLoss
 
                     elif monstershield == 0:                    
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
                         fighthp += monsterHpLoss
     
                 elif spell["Name"] == "Magic Explosion":
                     if monstershield > 0 and totaldmg > monstershield:
                         totaldmg - monstershield
-                        shieldloss = monstershield #shield lost will be used for animations
+                        monsterShieldLoss = monstershield #shield lost will be used for animations
                         monstershield = 0
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                     elif monstershield > 0 and monstershield > totaldmg:
-                        shieldloss = totaldmg 
+                        monsterShieldLoss = totaldmg 
                         monstershield = monstershield - totaldmg
 
                     elif monstershield == 0:                    
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
     
                 elif spell["Name"] == "Damage Debuff":
                     monster_debuffs.append({"State": "Monster Debuff", "Name":  "Damage Debuff", "Turns": 2, "Effect": "Reduces Enemy Damage by 40% for two turns", "Value": 0.40})
@@ -2368,21 +2379,21 @@ def fightscreen():
                 totaldmgcalculations()
                 #holds the spell dmg calculations
 
-                if spell["Name"] == "Wand Attack":
+                if spell["Name"] == "Palm Strike":
                     if monstershield > 0 and totaldmg > monstershield:
                         totaldmg - monstershield
-                        shieldloss = monstershield #shield lost will be used for animations
+                        monsterShieldLoss = monstershield #shield lost will be used for animations
                         monstershield = 0
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                     elif monstershield > 0 and monstershield > totaldmg:
-                        shieldloss = totaldmg 
+                        monsterShieldLoss = totaldmg 
                         monstershield = monstershield - totaldmg
                         
                     elif monstershield == 0:                    
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
                         
                     fightmp += 3 
 
@@ -2391,18 +2402,18 @@ def fightscreen():
                 elif spell["Name"] == "HP Drain":
                     if monstershield > 0 and totaldmg > monstershield:
                         totaldmg - monstershield
-                        shieldloss = monstershield #shield lost will be used for animations
+                        monsterShieldLoss = monstershield #shield lost will be used for animations
                         monstershield = 0
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                     elif monstershield > 0 and monstershield > totaldmg:
-                        shieldloss = totaldmg 
+                        monsterShieldLoss = totaldmg 
                         monstershield = monstershield - totaldmg
 
                     elif monstershield == 0:                    
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                     healingspell = True
                     healingCalculations()
@@ -2422,18 +2433,18 @@ def fightscreen():
 
                     if monstershield > 0 and totaldmg > monstershield:
                         totaldmg - monstershield
-                        shieldloss = monstershield #shield lost will be used for animations
+                        monsterShieldLoss = monstershield #shield lost will be used for animations
                         monstershield = 0
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                     elif monstershield > 0 and monstershield > totaldmg:
-                        shieldloss = totaldmg 
+                        monsterShieldLoss = totaldmg 
                         monstershield = monstershield - totaldmg
                         
                     elif monstershield == 0:                    
                         monsterHpLoss = mhp - totaldmg
-                        mhp - totaldmg
+                        mhp -= totaldmg
 
                     fightmp = 0 
 
@@ -2643,6 +2654,10 @@ def fightscreen():
                         mtotaldmg * (1 - spellEffects["Value"])
                 else:
                     break
+
+            #here because without this the spell will equate to a heal for the player as the formula is always hp - dmg so it would turn into hp --dmg
+            if mtotaldmg < 0:
+                mtotaldmg = 0
 
         #will determine if monster has mp and if will skip turn or not.
         if mmp <= 0: #for if the player makes the mp go into negative/=0 it buffs monster then they skip turn
