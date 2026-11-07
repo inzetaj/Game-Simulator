@@ -11,7 +11,7 @@ import random
     might try to make classes as they can remove unnecasarry variables
 7. add restrictions on names so that can use profanity languages will use .upper so that regardless of upper or lowercase can still flag it -- will probably make a new variable like nameProfanitycheck = name.upper() then will use an if - will assign this to the create character button
 10. create a logout button
-12. make the game be able to save a game instance associated with a login/pass - would probably make an automatic save in loading page or whatever button you click before switching pages and then another save upon logging out
+12. make the game be able to save a game instance associated with a login/pass - would probably make an automatic save in loading page or whatever button you click before switching pages using a def called saving and then another save upon logging out
     want to somehow encrypt my code so that people cant see it
     later on if decide to save information can just save the information from the variables and also include a portion where it updates the database in loading page - when i login can make an if and will take the stats saved in the database and make the variables = to that
 13. make login page activate with enter instead of just click
@@ -24,22 +24,15 @@ import random
         #need to make shields update in variable updates - can include the original set in the if at top
         #need to redit the print spells, if a spell does damage to a shield it only says -100 for example. and not that the shield lost points, also should include -hp instead of leaving it open while we're at it
         #might edit labels to where if hover over the monster/player image it will show stats portion instead of having buttons. 
-        #i made a function that destroys evert widget, going to put that in the other defs so i dont have to repeat .destroy                            
         #for spell activation could make a def for the spells so the same info isnt repeated
         
-        #need to test all spells to make sure they work - test mage spells next
-         #after finish testing spells going to put the clear window function where they need to be because loading page widgets arent being destroyed properly.
-
-         Warrior spell testing is finally complete, every spell works as intended.
-         Fixed monster hp not decreasing. Fights can now end properly.
-
-         #the monster mp label has an issue, i think need to try moving it for now    - also migt be because im not sure if i ever gave mmp an initial value so it might just be showing blank
         #currently i think even if win monster stats wont increase so need to check on this- might need to edit it where the array is constant being remade in different defs - actually rethought it and would only have to recast it in main screen, and might change the variable to where its initialized and then make a spell array def and have it be called out immediately
         #the damage the array shows will never be right until i add spell calculations so need to figure out how i want to show people the spell damage because if they cast the spell and the damamge is lower that would suck
+         - going to just reinitiate it in every new def and going to make a seperate def at the top that changes the initial value
+         -after change the intial arrays want to change the spell calculation in the fight, want to show the actual damamge calcultions
         #even if you win and when you're supossed to get a lvl up the exp value does change but the other stats dont, lvl aside i think its because need to reissue the array
 
             1. fix everything bug wise during and after the fight
-                - fix spells
                 -then fix after fight mechanics
 
             2. Do all the other little things that i wanted to add and fix to the fight that has #'s
@@ -70,18 +63,16 @@ import random
                 #after that going to go ahead and do animations, character stuff will be copying and pasting from ehre and will be much more work
     
 17. need to include more tips- also want to edit it abit because i think i have extra codes , could just try appending based on class - 
-    - for each spell a monster cast after a certain ammount of attacks they will gain dmg due to radiation
     - you will lose 1 hp every turn due to radiation, so make sure to finish the fight quickly
     - every turn you will gain 1 mp
-    - monsters uses their own mp to cast spells, monsters cannot cast spells without mp and if they start their turn without mp they will skip
-    - If you hover over spells info about the spell will pop up
+    - If you hover over spells, info about the spell will pop up
     Every 4 turns monsters get a damage boost for 1 turn
     monster will always cast bigger mp spells first
     every 2 turns a 4mp spell will be casted and every 3 turns a 5mp spell will be casted by monsters
     monsters will always do 0-3 attacks per turn
     if you take all of the monsters mp it will skip turn but gain x2 damage
     -physical or magical defence /2 is subtracted by dmg - the stats for defences /2 is what is being subtracted by your total damage
-
+    the damage the spells shows in the panels are the predamage before calculating off of monster's resistance so actual damamge will always be lower except the damage calculated in the fight
 
 
 18. want to make the graphics more better, i might include giphs and maybe a video like wakfu that introduces the game - and for fighting when you click spell fasts the animations dont glitch and instead they are just done way faster. 
@@ -123,14 +114,12 @@ fightHpandMpset = False #used when determining if hp and mp was already set to t
 
 timenow = datetime.now().strftime("%H:%M:%S") #here so i can use it whenever
 
-screenName =""#used for destroying screens in clearWindow
-
 monsters = [
     {#strong magic but phyically weak
         "name": "Goylca",
         "lvl": currentlvl, 
         "hp": 70 + currentlvl*1.5, 
-        "mp": 40, 
+        "mp": 12, 
         "physical_defence": 1 + currentlvl*1.5, 
         "magical_defence": 5 + currentlvl*1.5, 
         "physical_dmg": 0 + currentlvl*1.5, 
@@ -140,7 +129,7 @@ monsters = [
         "name": "Bulmar", 
         "lvl": currentlvl, 
         "hp": 100 + currentlvl*1.5, 
-        "mp": 20, 
+        "mp": 12, 
         "physical_defence": 5 + currentlvl*1.5, 
         "magical_defence": 1, 
         "physical_dmg": 5 + currentlvl*1.5, 
@@ -150,7 +139,7 @@ monsters = [
         "name": "Krosmo Crusher", 
         "lvl": currentlvl, 
         "hp": 130 + currentlvl*1.5, 
-        "mp": 50 + currentlvl*1.5, 
+        "mp": 12 + currentlvl*1.5, 
         "physical_defence": 10 + currentlvl*1.5, 
         "magical_defence": 10 + currentlvl*1.5, 
         "physical_dmg": 8 + currentlvl*1.5,
@@ -160,7 +149,7 @@ monsters = [
         "name": "Hierophant",
         "lvl": currentlvl, 
         "hp": 110 + currentlvl*1.5, 
-        "mp": 20, 
+        "mp": 12, 
         "physical_defence": 5 + currentlvl*1.5, 
         "magical_defence": 5 + currentlvl*1.5, 
         "physical_dmg": 3 + currentlvl*1.5, 
@@ -221,7 +210,7 @@ magespells = [
     {
         "Name": "MP Drain",
         "MP Cost": 3,
-        "Damage": "(lvl * 1.5)",
+        "Damage": "(lvl * 1.5) lowered by 70%",
         "Description": "Drains the target of MP equal to tripple the MP used. Causes slight damage as the target is being drained. Disables the target for 1 turn due to magic poisoning.",
         "Spell Icon": "Images/Mage Spell Icons/Mp Drain.png"
 
@@ -298,10 +287,8 @@ numOfFights = 0 #just a personal status later on for people who will want to kno
 
 #for destroying everything in windows, doesnt work on images
 def clearWindow():
-    global screenName
-    if screenName == "fightscreen":
-        for widget in window.fightscreen():
-            widget.destroy()
+    for widget in window.winfo_children():
+        widget.destroy()
 #-----------------------------------main window----------------------------------
 #Create Window
 window = tk.Tk()
@@ -345,7 +332,6 @@ def login():
     global logginerrortxt
     global entered_user
     global entered_pass
-
 
         #is to see if password entered is right
     entered_user = username_entry.get()
@@ -396,13 +382,7 @@ def loadingpage():
     try:
         # Destroy the interactive widgets so they disappear - its in a try because if run this again may cause an error because already deleted it
         try:
-            username_entry.destroy()
-            password_entry.destroy()
-            login_but.destroy()
-            password_lab.destroy()
-            username_lab.destroy()
-            title.destroy()
-            bg_label.destroy()
+            clearWindow()
         except ValueError:
                 print("Code already deleted")
 
@@ -533,11 +513,7 @@ def loadingpage():
                 pastlvl = currentlvl
 
         # make it destroy everything again when its done
-        loadingtxt.destroy()
-        loadingbg_lab.destroy()
-        randominfoarray = None
-        randominfo_lab.destroy()
-        loadingtxt.destroy()
+        clearWindow()
         window.update_idletasks() 
 
         
@@ -921,22 +897,7 @@ def characterscreen():
                 mp = 3
                 
             #destroy everything
-            healer_btn.destroy()
-            mage_btn.destroy()
-            warrior_btn.destroy()
-            classimgs_lab.destroy()
-            previewheader_lab.destroy()
-            info_lab.destroy()
-            classinfotxt_lab.destroy()
-            left_panel.destroy()
-            choseyourclass_lab.destroy()
-            createcharacter_btn.destroy()
-            Mgender_btn.destroy()
-            fgender_btn.destroy()
-            chosegender_lab.destroy()
-            name_entry.destroy()
-            entername_lab.destroy()
-            characterscreenbg_lab.destroy()
+            clearWindow()
             window.update_idletasks() 
 
             #activate loading screen - theres an if in there that will send it to the main screen
@@ -1462,28 +1423,18 @@ def mainscreen():
     #announce level ups after battle with an if/else
     if lvlupnotification == "You Have Leveled Up!":
             # The Pop-up box code
-        messagebox.showinfo(f"{lvlupnotification}\n Your current level is LV.{currentlvl}!")
+        messagebox.showinfo(f"{lvlupnotification}", f"Your current level is LV.{currentlvl}!")
     elif fightWon == False and numOfFights > 0:
-        messagebox.showinfo(f"You have lost\n Your current level is LV.{currentlvl}!")
+        messagebox.showinfo("You have lost", f"Your current level is LV.{currentlvl}!")
 
     def startfight():
         global fightstatus
 
         try:
             if difficulty != "":
-                dropdown.destroy()
-                name_lab.destroy()
-                monsterimgs_lab.destroy()
-                stats_but.destroy()
-                spells_but.destroy()
-                classimgs_lab.destroy()
-                mainscreenimg_lab.destroy()
-                startfight_but.destroy()
-
+                clearWindow()
                 fightstatus = "Fight Started"
-
                 window.update_idletasks() 
-
                 loadingpage()
             else: 
                 raise ValueError
@@ -1503,7 +1454,6 @@ def fightscreen():
     global name
     global monsters
     global hp, mp, basedmg, currentexp, pastlvl
-    global screenName
     global expneeded
     global fightstatus
     global timer
@@ -1511,8 +1461,6 @@ def fightscreen():
     global pressedEndFight
     global fightHpandMpset
     global gender#this because when creating buttons some genders have different colors than their other gender counterpart
-
-    screenName = "fightscreen"
 
     #this because of end fight button sends back to fight screen
     if pressedEndFight == False:
@@ -1838,8 +1786,8 @@ def fightscreen():
         nonlocal mhp
         nonlocal mmp
 
-        hplab_text.set(f"{fighthp}")
-        mhplab_text.set(f"{mhp}")
+        hplab_text.set(f"{fighthp:.2f}")
+        mhplab_text.set(f"{mhp:.2f}")
         fightmp_text.set(f"MP: {fightmp}")
         mmp_text.set(f"{mmp}")
 
@@ -2026,13 +1974,18 @@ def fightscreen():
     spellinfo_lab = tk.Label(window, text="", font=("Ariel", 12), fg="black", bg="purple")
     spellinfo_lab.place(relx=0.5, rely=0.5, anchor="center")
 
+    #this makes it so that the label disappears completely and only appears when a button is hovered over
+    spellInfoLabPlace = spellinfo_lab.place_info()
+    spellinfo_lab.place_forget()
+
+
     def spellactivation(spell):
         global warriorspells, magespells, healerspells
         global character_selected
         global difficulty
         global character_selected 
         global name, monstername
-        global basedmg
+        global basedmg, hp
         global currentexp, pastlvl, expneeded, currentlvl
         global fightstatus
         global timer, timenow
@@ -2119,7 +2072,7 @@ def fightscreen():
             for spellEffects in player_debuffs + player_buffs + monster_buffs:
                 if spellEffects["State"] == "Player Debuff":
                     if spellEffects["Name"] == "Damage Debuff":
-                        totaldmg * (1 - spellEffects["Value"])
+                        totaldmg *= (1 - spellEffects["Value"])
                 elif spellEffects["State"] == "Player Buff":
                     pass #i dont know what buffs i will have yet
                 elif spellEffects["State"] == "Monster Buff":
@@ -2148,10 +2101,7 @@ def fightscreen():
 
         else: 
             #--------------------this calculates actual total dmg and will also do animations in the future
-            if temporaryMpCost != "100%":
-                fightmp -= temporaryMpCost
-            else:
-                print("MP Cost wasn't converted to an int.")
+            fightmp -= temporaryMpCost
 
             if character_selected == "Warrior":
                 #warrior spell bonus was calculated in totaldmgcalculations()
@@ -2257,9 +2207,10 @@ def fightscreen():
         
             elif character_selected == "Mage":
                 mpdmg = (mpused + (temporaryMpCost/2))*3
+             
                 #holds the spell dmg calculations
-
                 totaldmgcalculations()
+
                 if spell["Name"] == "Staff Attack":
                     if monstershield > 0 and totaldmg > monstershield:
                         totaldmg - monstershield
@@ -2284,8 +2235,13 @@ def fightscreen():
                     variablesUpdate()
 
                 elif spell["Name"] == "MP Drain":
-
-                    totaldmg -= (mpused + (temporaryMpCost/2))*3#this here because the dmg calculations added more dmg, this spell only supossed to do slight damage
+                    totaldmg *= (1 - 0.70) #this here because the dmg calculations added more dmg, this spell only supossed to do slight damage
+                    
+                    if totaldmg < 0: #this here because if total damage goes below 0 it will give a display error
+                        totaldmg = 0
+                                            
+                    mploss = random.randint(3, 9)
+                    
                     if monstershield > 0 and totaldmg > monstershield:
                         totaldmg - monstershield
                         monsterShieldLoss = monstershield #will be used for animations
@@ -2293,25 +2249,16 @@ def fightscreen():
                         monsterHpLoss = mhp - totaldmg
                         mhp -= totaldmg
 
-                        mploss = random.randint(3, 9)
-                        mmp - mploss
-                        fightmp += mploss 
-
                     elif monstershield > 0 and monstershield > totaldmg:
                         monsterShieldLoss = totaldmg 
                         monstershield = monstershield - totaldmg
-                        
-                        mploss = random.randint(3, 9)
-                        mmp - mploss
-                        fightmp += mploss 
 
                     elif monstershield == 0:                    
                         monsterHpLoss = mhp - totaldmg
                         mhp -= totaldmg
-
-                        mploss = random.randint(3, 9)
-                        mmp - mploss
-                        fightmp += mploss 
+                        
+                    mmp -= mploss              
+                    fightmp += mploss 
     
                 elif spell["Name"] == "HP Drain":
                     if monstershield > 0 and totaldmg > monstershield:
@@ -2321,16 +2268,17 @@ def fightscreen():
                         monsterHpLoss = mhp - totaldmg
                         mhp -= totaldmg
 
-                        fighthp += monsterHpLoss
-
                     elif monstershield > 0 and monstershield > totaldmg:
                         monsterShieldLoss = totaldmg 
                         monstershield = monstershield - totaldmg
-                        fighthp += monsterHpLoss
 
                     elif monstershield == 0:                    
                         monsterHpLoss = mhp - totaldmg
                         mhp -= totaldmg
+
+                    if fighthp + monsterHpLoss > hp:
+                        fighthp = hp
+                    else:
                         fighthp += monsterHpLoss
     
                 elif spell["Name"] == "Magic Explosion":
@@ -2350,6 +2298,7 @@ def fightscreen():
                         mhp -= totaldmg
     
                 elif spell["Name"] == "Damage Debuff":
+                    totaldmg = 0  #set to 0 so it doesnt get printed as its doing damage                 
                     monster_debuffs.append({"State": "Monster Debuff", "Name":  "Damage Debuff", "Turns": 2, "Effect": "Reduces Enemy Damage by 40% for two turns", "Value": 0.40})
 
             elif character_selected == "Healer":
@@ -2457,18 +2406,20 @@ def fightscreen():
             #update fightlog
             fightlog_box.configure(state="normal")    # unlock so it can be written to
             fightlog_box.insert("end", f"{timenow} {name}: has casted {spell["Name"]}.\n")   # add the line at the bottom                    
-            fightlog_box.insert("end", f"{timenow} {monstername}: -{totaldmg}\n")   # add the line at the bottom                    
+            fightlog_box.insert("end", f"{timenow} {monstername}: -{totaldmg:.2f}\n")   # add the line at the bottom                    
             fightlog_box.see("end")                   # scroll down to the newest line
             fightlog_box.configure(state="disabled")  # lock it so the player can't type in it
 
             variablesUpdate()
             window.update()
-    
+
     def show_spell_info(spell): #shows spell info in label when hovered over.
         spellinfo_lab.config(image = spellIcon, text=f"\n\n\t\t{spell["Name"]} \nMP Cost: {spell["MP Cost"]} \nDamage: {spell["Damage"]} \nDescription: {spell["Description"]}", font=("Ariel", 12, "bold"), wraplength=500, justify="left", anchor="w", compound="top")
-         
+        spellinfo_lab.place(**spellInfoLabPlace)
+
     def hide_spell_info(event=None): #hides spell info in label.
         spellinfo_lab.config(image = "", text="")
+        spellinfo_lab.place_forget()
 
     spell_buttons = []
     #need to go back to the array above and include spell pictures and call it spell["Spell Icon"]
@@ -2556,6 +2507,7 @@ def fightscreen():
             pass#already know it means timer doesnt exist 
     
         monsterSkippedTurn = False #this will be used in deciding if monster skipped turn or no
+        temporaryattackCount = 0 #this is the temporary count that is be used inside the while loop and it will never stay the same.
         mmpUsed = 0          # default every turn, so it always exists
         mspellcasted = "" #this is here so second turn this doesnt cause a crash
 
@@ -2651,7 +2603,7 @@ def fightscreen():
                     pass #i dont know what buffs i will have yet
                 elif spellEffects["State"] == "Monster Debuff":
                     if spellEffects["Name"] == "Damage Debuff":
-                        mtotaldmg * (1 - spellEffects["Value"])
+                        mtotaldmg *= (1 - spellEffects["Value"])
                 else:
                     break
 
@@ -2674,7 +2626,7 @@ def fightscreen():
             attackCount = 0
 
             #will need to set it where if dont have enough mp will end turn and attackCount will equal 3
-            while attackCount != 3:
+            while attackCount > 3:
 
                 if  mmp >= 3: #this checks the lowest mp needed to cast all spells, further checks inside
                         if mmp >= 5:
@@ -2696,13 +2648,13 @@ def fightscreen():
 
                         if not pause(1500): #code stops here for 1.5s, but the window stays alive -  basically it runs pause and returns a value of true or false if no error occurs
                             return
-                        
-                        print(mtotaldmg)
+
+                        mmp -= mmpUsed
                         monstertotaldmgcalculations()
                         fightlog_box.configure(state="normal")    # unlock so it can be written to
                         fightlog_box.insert("end", f"{timenow} {monstername}: has casted {mspellcasted}.\n")   # add the line at the bottom                    
                         fighthp -= mtotaldmg #does the damage
-                        fightlog_box.insert("end", f"{timenow} {name}: -{mtotaldmg}\n")   # add the line at the bottom                    
+                        fightlog_box.insert("end", f"{timenow} {name}: -{mtotaldmg:.2f}\n")   # add the line at the bottom                    
                         fightlog_box.see("end")                   # scroll down to the newest line
                         fightlog_box.configure(state="disabled")  # lock it so the player can't type in it                        
                         
