@@ -5,20 +5,30 @@ from datetime import datetime
 import time
 import random
 import math
+from better_profanity import profanity
+
 """this i want to fix- will do these later on, not pressing issues
 1. loading page-  want to make the labels in here a bit bigger so no1 strains to see
 2. add music
-3. add restrictions on names so that can use profanity languages will use .upper so that regardless of upper or lowercase can still flag it -- will probably make a new variable like nameProfanitycheck = name.upper() then will use an if - will assign this to the create character button
 4. create a logout button
 5. make the game be able to save a game instance associated with a login/pass - would probably make an automatic save in loading page or whatever button you click before switching pages using a def called saving and then another save upon logging out
     want to somehow encrypt my code so that people cant see it
     later on if decide to save information can just save the information from the variables and also include a portion where it updates the database in loading page - when i login can make an if and will take the stats saved in the database and make the variables = to that
 6. make login page activate with enter instead of just click
 7. edit code to include a tutorial
+
+        1. Redid the print spells, it now specifically says what was gained or lose instead of -100 for example.
+        2. Namees that contain profanity will be prompt an error and will no longer be allowed to be used.
+        3. Added shield calculations to monster spells, before it just did the damage and didnt take into account the shield, now it does.
+        4. Fixed monster casting more than 3 spells in a turn. It was casting 4 before which wasn't intended.
+        5. Fixed Heirophant icon not displaying correctly in fight screen, it used to use the big image and not the icon.
+        6. The print message for when a monster ends its turn is now printed correctly, it used to ust give the timestamp.
         
+        Next - 
         1. change monster stats into a hover monster img and add the monster shield variable in there - delete monster stats btn
-        2. make new player stats window and include shield variable - make sure it includes the spell bonuses too, it should be activated by hovering over the character img
-        3. for spell activation could make a def for the spells so the same info isnt repeated
+        2. make new player stats window and include shield variable - make sure it includes the spell bonuses too, it should be activated by hovering over the character img        
+        
+        3. for spell activation could make a def for the spells so the same info isnt repeated >> can actually move the shield part into the totaldamage calculations like i did for mtotaldamage
         4. include the spell bonus descriptions in main screen
         5. Change spell arrays - going to make the variables empty - make a  def which inside i will reinitialize the array with =- call it immidiately- then just need to paste the def in character screen to change the values after every fight
         6. do the same thing above for monster array ^ - can put it in the same def actually
@@ -60,6 +70,7 @@ import math
     if you take all of the monsters mp it will skip turn but gain x2 damage
     -physical or magical defence /2 is subtracted by dmg - the stats for defences /2 is what is being subtracted by your total damage
     the damage the spells shows in the panels are the predamage before calculating off of monster's resistance so actual damamge will always be lower except the damage calculated in the fight
+    to show the stats in fight all you need to do is right click the character/monster image
 
 
 18. want to make the graphics more better, i might include giphs and maybe a video like wakfu that introduces the game - and for fighting when you click spell fasts the animations dont glitch and instead they are just done way faster. 
@@ -855,46 +866,52 @@ def characterscreen():
         global name
 
         name = name_entry.get() # save the name so doesnt get lost
+        characterNameError = "" # for if they dont type in a name or class or chose a bad word as their name
 
         try:
-         if character_selected != "" and name != "" and name != " " and name != None:
+            profanity.load_censor_words()
+            if profanity.contains_profanity(name):
+                characterNameError = "Your name contains profanity.", "Please choose a different name." 
+                raise ValueError # this is for when they havent typed in any info from the if
+
+
+            if character_selected != "" and name != "" and name != " " and name != None:
             
+                #assign gender if the gender button wasn't clicked, since male pops up first in the preview
+                if gender == "":
+                    gender = "Male"
 
-            #assign gender if the gender button wasn't clicked, since male pops up first in the preview
-            if gender == "":
-                gender = "Male"
+                #creating character stats
+                if character_selected == "Warrior":
+                    hp = 90
+                    physical_defence = 4
+                    magical_defence = 1
+                    mp = 0
 
-            #creating character stats
-            if character_selected == "Warrior":
-                hp = 90
-                physical_defence = 4
-                magical_defence = 1
-                mp = 0
+                elif character_selected == "Mage":
+                    hp = 70
+                    physical_defence = 1
+                    magical_defence = 4
+                    mp = 4
 
-            elif character_selected == "Mage":
-                hp = 70
-                physical_defence = 1
-                magical_defence = 4
-                mp = 4
+                elif character_selected == "Healer":
+                    hp = 80
+                    physical_defence = 2
+                    magical_defence = 2
+                    mp = 3
+                    
+                #destroy everything
+                clearWindow()
+                window.update_idletasks() 
 
-            elif character_selected == "Healer":
-                hp = 80
-                physical_defence = 2
-                magical_defence = 2
-                mp = 3
-                
-            #destroy everything
-            clearWindow()
-            window.update_idletasks() 
-
-            #activate loading screen - theres an if in there that will send it to the main screen
-            loadingpage()
-
-         else: 
-            raise ValueError # this is for when they havent typed in any info from the if
+                #activate loading screen - theres an if in there that will send it to the main screen
+                loadingpage()
+            else: 
+                characterNameError = "Error", "Please make sure a class or name has been chosen."
+                raise ValueError # this is for when they havent typed in any info from the if
 
         except ValueError:
-            messagebox.showerror("Error", "Please make sure a class or name has been chosen.")
+            messagebox.showerror(*characterNameError)
 
     #----------------------------building buttons-------------------------------
 
@@ -1467,6 +1484,12 @@ def fightscreen():
         monster_buffs = []  
         monster_debuffs = [] 
 
+        playerShieldLoss = 0 #used in print messages so player knows if they lost shields.
+        monsterShieldLoss = 0
+        playerShieldGain = 0 #used in the print message
+        monsterShieldGain = 0 #used in print message - currently not used because monsters dont have spells that gain shields currently
+
+
         characterTurn = True
         monsterTurn = False
 
@@ -1972,13 +1995,15 @@ def fightscreen():
         global timer, timenow
         nonlocal mhp, fighthp, fightmp, mmp, mphysical_defence, mmagical_defence
         nonlocal player_buffs, player_debuffs, monster_buffs, monster_debuffs
-        nonlocal playershield, monstershield
+        nonlocal playershield, monstershield, playerShieldLoss, monsterShieldLoss, playerShieldGain
 
         mpused = spell["MP Cost"] #is change for simplicity sake mostly
         healingbonus = 0 #essentially initializing it - this is used for healer spells for the base healing their spells will do
         mpdmg = mpused*3 #whenever need to do math with magical dmg only need to assign the valueto   mpused and add mpdmg 
         spelldmg = 0 #its the base spell dmg for every spell
         totaldmg = 0 #the actual dmg that will be dealt
+        playerShieldGain = 0 #used in the print message
+        monsterShieldLoss = 0
 
         #---------------this decides the base total dmg in the fight, additional adds on to this dmg will change depending on the spell, mostly here so that this part doesnt repeat in all if's---------------
         #made this a def because in the spells, certain spells/classess can cause additional effects and may need to redo the math below
@@ -2183,7 +2208,8 @@ def fightscreen():
                     fightmp += 2 
 
                     #this gives shield at random from half of damage dealt to full damage dealt
-                    playershield += round(random.uniform(totaldmg / 2, totaldmg), 1) #the 1 at the end is the number of decimal places to keep, round is only making it round that 1 decimal to hgihest number
+                    playerShieldGain = round(random.uniform(totaldmg / 2, totaldmg), 1) #the 1 at the end is the number of decimal places to keep, round is only making it round that 1 decimal to hgihest number
+                    playershield += playerShieldGain
         
             elif character_selected == "Mage":
                 mpdmg = (mpused + (temporaryMpCost/2))*3
@@ -2339,7 +2365,8 @@ def fightscreen():
                     healingspell = True
 
                 elif spell["Name"] == "Protective Barrier":
-                    playershield += mpdmg*(currentlvl*1.5)
+                    playerShieldGain = mpdmg*(currentlvl*1.5)
+                    playershield += playerShieldGain
                     totaldmg = 0 #if dont set this it will print the shield as dmg below
             
                 elif spell["Name"] == "Sacrificial Lamb":
@@ -2375,12 +2402,31 @@ def fightscreen():
                 healingCalculations()
 
             #update fightlog
+           # 1. Redit the print spells, if a spell does damage to a shield it only says -100 for example. and not that the shield lost points, also should include -hp instead of leaving it open while we're at it
+            #should include + shield and -shield
             fightlog_box.configure(state="normal")    # unlock so it can be written to
-            fightlog_box.insert("end", f"{timenow} {name}: has casted {spell["Name"]}.\n")   # add the line at the bottom                    
-            fightlog_box.insert("end", f"{timenow} {monstername}: -{totaldmg:.2f}\n")   # add the line at the bottom                    
+
+            fightlog_box.insert("end", f"{timenow} {name}: has casted {spell["Name"]}.\n") 
+            #prints the shield/hp a monster loss 
+            if monsterShieldLoss > 0:
+                fightlog_box.insert("end", f"{timenow} {monstername}: - {monsterShieldLoss:.2f} shield.\n")    
+                if monstershield <= 0:
+                    fightlog_box.insert("end", f"{timenow} {monstername}: - {totaldmg:.2f} health points.\n")                   
+            else:
+                fightlog_box.insert("end", f"{timenow} {monstername}: - {totaldmg:.2f} health points.\n")
+
+            #prints the shield a player gained/loss
+            if playerShieldGain > 0:
+                fightlog_box.insert("end", f"{timenow} {name}: + {playerShieldGain:.2f} shield.\n")                   
+
+            if playerShieldLoss > 0:
+                fightlog_box.insert("end", f"{timenow} {name}: - {playerShieldLoss:.2f} shield.\n")                    
+
+            # add the line at the bottom                    
             fightlog_box.see("end")                   # scroll down to the newest line
             fightlog_box.configure(state="disabled")  # lock it so the player can't type in it
 
+            playerShieldGain = 0 #used in the print message -  reseting it to 0 so in monster turn it doesnt print the shield gain from player turn
             variablesUpdate()
             window.update()
 
@@ -2434,7 +2480,7 @@ def fightscreen():
         pressedEndTurn = True #this is to properly destroy countdown timer if player presses end turn - it doesn't accurately say if end turn was pressed or not - would need to make another def and connect that to this one
                     #update fightlog
         fightlog_box.configure(state="normal")    # unlock so it can be written to
-        fightlog_box.insert("end", f"{timenow} {name}: Turn has ended.\n")   # add the line at the bottom                    
+        fightlog_box.insert("end", f"{timenow} {name}: Your turn has ended.\n")   # add the line at the bottom                    
         fightlog_box.see("end")                   # scroll down to the newest line
         fightlog_box.configure(state="disabled")  # lock it so the player can't type in it
         
@@ -2442,9 +2488,7 @@ def fightscreen():
 
     #this is because im going to do with where every 9 attacks monster gets damage buff and also used for other affects
     totalAttackCount = 0
-    def monster_turn():        #need to add attack parts
-
-            #will have to edit end turn where it activates countdown as well
+    def monster_turn():  #everything from monster attacks and calculating monster damage and more.
         nonlocal fightmp 
         nonlocal mmp
         nonlocal turn 
@@ -2458,6 +2502,7 @@ def fightscreen():
         nonlocal mphysical_dmg, mmagical_dmg
         global time, timenow
         global monstername
+        nonlocal playershield, monstershield, playerShieldLoss, monsterShieldLoss, monsterShieldGain
 
         #checks to see if countdown is still counting down and if is, it cancels it
         if oneSecondCountdown is not None and oneSecondCountdown in window.tk.call('after', 'info'):
@@ -2486,7 +2531,7 @@ def fightscreen():
         if monstername == "Hierophant":
 
             monster_imgicon = tk.PhotoImage(file="Images/Hierophant_icon.png")
-            yourturnimg_lab.config(image=monster_img)
+            yourturnimg_lab.config(image=monster_imgicon)
             yourturnimg_lab.image = monster_imgicon
 
             #monster spell names
@@ -2536,13 +2581,13 @@ def fightscreen():
             nonlocal mmpUsed
             global physical_defence, magical_defence
             global currentlvl
-            nonlocal mtotaldmg
+            nonlocal mtotaldmg, fighthp
             nonlocal mphysical_dmg, mmagical_dmg
             global name
+            nonlocal playershield, monstershield, playerShieldLoss, monsterShieldLoss, monsterShieldGain
 
             mmpdmg = mmpUsed*1.5
             mbasedmg = (mphysical_dmg + mmagical_dmg)*1.5
-
                     
             if mmpUsed > 0: #checks if the mpused is above 0 for mp dmg
                 #for calculating the dmg loss from player defence defence and basic spell damage
@@ -2582,6 +2627,22 @@ def fightscreen():
             if mtotaldmg < 0:
                 mtotaldmg = 0
 
+            #if theres a shield and total damage is more than the shield, shield will be removed then u lose hp
+            if playershield > 0 and mtotaldmg > playershield:
+                playerShieldLoss = playershield #saves the amount of shield lost
+                mtotaldmg -= playershield
+                playershield = 0
+                fighthp -= mtotaldmg #does the damage
+
+            #if theres a shield but total damamge is less than the shield
+            elif playershield > 0 and playershield > mtotaldmg:
+                playerShieldLoss = mtotaldmg 
+                playershield -= mtotaldmg
+
+            #no shield at all, just does damage
+            elif playershield <= 0:                    
+                fighthp -= mtotaldmg #does the damage
+
         #will determine if monster has mp and if will skip turn or not.
         if mmp <= 0: #for if the player makes the mp go into negative/=0 it buffs monster then they skip turn
             mmp = 0
@@ -2597,7 +2658,7 @@ def fightscreen():
             attackCount = 0
 
             #will need to set it where if dont have enough mp will end turn and attackCount will equal 3
-            while attackCount <= 3:
+            while attackCount < 4:
 
                 if  mmp >= 3: #this checks the lowest mp needed to cast all spells, further checks inside
                         if mmp >= 5:
@@ -2620,18 +2681,31 @@ def fightscreen():
                         if not pause(1500): #code stops here for 1.5s, but the window stays alive -  basically it runs pause and returns a value of true or false if no error occurs
                             return
 
-                        mmp -= mmpUsed
-                        monstertotaldmgcalculations()
+                        mmp -= mmpUsed #so total mp goes down
+
+                        #update fightlog
                         fightlog_box.configure(state="normal")    # unlock so it can be written to
-                        fightlog_box.insert("end", f"{timenow} {monstername}: has casted {mspellcasted}.\n")   # add the line at the bottom                    
-                        fighthp -= mtotaldmg #does the damage
-                        fightlog_box.insert("end", f"{timenow} {name}: -{mtotaldmg:.2f}\n")   # add the line at the bottom                    
+                        fightlog_box.insert("end", f"{timenow} {monstername}: has casted {mspellcasted}.\n")   # add the line at the bottom   
+                        
+                        monstertotaldmgcalculations()
+
+                        #prints the shield a player gained/loss + damage
+                        if playerShieldGain > 0: #if gain shield
+                            fightlog_box.insert("end", f"{timenow} {name}: + {playerShieldGain:.2f} shield.\n")                   
+
+                        if playerShieldLoss > 0: #if player loses shield
+                            fightlog_box.insert("end", f"{timenow} {name}: - {playerShieldLoss:.2f} shield.\n")                    
+                            if playershield <= 0:
+                                fightlog_box.insert("end", f"{timenow} {name}: - {mtotaldmg:.2f} health points.\n")        
+                        else: #just does damage
+                            fightlog_box.insert("end", f"{timenow} {name}: - {mtotaldmg:.2f} health points.\n")
+                        
                         fightlog_box.see("end")                   # scroll down to the newest line
                         fightlog_box.configure(state="disabled")  # lock it so the player can't type in it                        
                         
-                        mmp -= mmpUsed #so total mp goes down
-                        #can include animations from this point i think
-
+                        #can include animations from this point i think based off of spell name
+                        
+                        monsterShieldGain = 0 #used in the print message -  reseting it to 0 so in monster turn it doesnt print the shield gain from player turn
                         variablesUpdate()
                         attackCount += 1
 
@@ -2648,11 +2722,13 @@ def fightscreen():
             fightlog_box.configure(state="normal")    # unlock so it can be written to
             if monsterSkippedTurn == True:
                 if temporaryattackCount == 0:
-                    fightlog_box.insert("end", timenow + " ", monstername + ": has skipped it's turn.\n")   # add the line at the bottom   
+                    fightlog_box.insert("end", f"{timenow} {monstername}: Has skipped it's turn due to no MP.\n")
                 else:
-                    fightlog_box.insert("end", timenow + " ", monstername + ": has ended it's turn early.\n")   # add the line at the bottom   
+                    fightlog_box.insert("end", f"{timenow} {monstername}: Has ended it's turn early.\n")
+                    
             else:
-                fightlog_box.insert("end", timenow + " ", monstername + ": has ended it's turn.\n")   # add the line at the bottom   
+                fightlog_box.insert("end", f"{timenow} {monstername}: Has ended it's turn.\n")
+
             fightlog_box.see("end")                   # scroll down to the newest line
             fightlog_box.configure(state="disabled")  # lock it so the player can't type in it
 
