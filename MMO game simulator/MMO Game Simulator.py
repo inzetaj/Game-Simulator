@@ -8,8 +8,10 @@ import random
 import math
 """this i want to fix- will do these later on, not pressing issues
 1. loading page-  want to make the labels in here a bit bigger so no1 strains to see
+    -WANT TO CHANGE THE tips so that they rotate regardless of how long the loading takes
+    -might need to get rid of the .sleep and instead use a .after or something like i did in fight screen
 2. add music
-3. create a logout button
+3. create a logout button  - gonna make a def and in the def gonna be ifs because each screen think i will want to place it in a diferent place
 4. make the game be able to save a game instance associated with a login/pass - would probably make an automatic save in loading page or whatever button you click before switching pages using a def called saving and then another save upon logging out
     want to somehow encrypt my code so that people cant see it
     later on if decide to save information can just save the information from the variables and also include a portion where it updates the database in loading page - when i login can make an if and will take the stats saved in the database and make the variables = to that
@@ -23,12 +25,15 @@ import math
     every 2 turns a 4mp spell will be casted and every 3 turns a 5mp spell will be casted by monsters
     monsters will always do 0-3 attacks per turn
     if you take all of the monsters mp it will skip turn but gain x2 damage
+    monster Total damage is calculated using Magical + Physical Damage instead of Base Damage
     -physical or magical defence /2 is subtracted by dmg - the stats for defences /2 is what is being subtracted by your total damage
     the damage the spells shows in the panels are the predamage before calculating off of monster's resistance so actual damamge will always be lower except the damage calculated in the fight
     to show the stats in fight all you need to do is right click the character/monster image
+    you can find your current shield by right clicking your character image and it will show you the current shield value, same for monster shields
 7. want to make the graphics more better, i might include giphs and maybe a video like wakfu that introduces the game - and for fighting when you click spell fasts the animations dont glitch and instead they are just done way faster. 
+8. make it so that in logic screen they can make their own login which will be saved - think will just make an extra button and will be named new account or something, will have a new window popup which will ask if the info and confirm it twice. if user1 != user2 then it will prompt that they need to retype either for example
+9. create the monster stats button and def in main screen - make it so that the stats will be changed depending on the difficulty selected - would also like an option where once change the difficulty the stats window will be automatically updated   
 
-        4. include the spell bonus descriptions in main screen
         5. Change spell arrays - going to make the variables empty - make a  def which inside i will reinitialize the array with =- call it immidiately- then just need to paste the def in character screen to change the values after every fight
         6. do the same thing above for monster array ^ - can put it in the same def actually
         7. even if you win and when you're supossed to get a lvl up the exp value does change but the other stats dont, lvl aside i think its because need to reissue the array
@@ -1853,15 +1858,10 @@ def fightscreen():
         #sends to loading page
         loadingpage()
 
-    def monsterStatsWindow():    #for the monster stats button - 
+    def monsterStatsWindow(event):    #for the monster stats button - event is because when binding always need to have event in the function
         global monstername
-        nonlocal mhp
-        nonlocal mmp
-        nonlocal mphysical_defence
-        nonlocal mmagical_defence
-        nonlocal mphysical_dmg
-        nonlocal mmagical_dmg
-        nonlocal monsterlvl
+        nonlocal mhp, mmp, monsterlvl, monstershield
+        nonlocal mphysical_defence, mmagical_defence, mphysical_dmg, mmagical_dmg 
 
                 #Create Stats window Window
         statswindow = tk.Tk()
@@ -1893,7 +1893,7 @@ def fightscreen():
         mhp_label.grid(row=0, column=0, padx=5, pady=5)
 
         #mmp label for stats window
-        mmp_statsWindow_label = tk.Label(stats_panel, text=f"MP: {mmp_text}", fg="white", bg="black", font=("Courier", 14, "bold"))
+        mmp_statsWindow_label = tk.Label(stats_panel, text=f"MP: {mmp}", fg="white", bg="black", font=("Courier", 14, "bold"))
         mmp_statsWindow_label.grid(row=1, column=0, padx=5, pady=5)
 
         #mphysical dmg label
@@ -1912,11 +1912,77 @@ def fightscreen():
         mmagical_defence_label = tk.Label(stats_panel, text=f"Magical Defence: {mmagical_defence}", fg="white", bg="black", font=("Courier", 14, "bold"))
         mmagical_defence_label.grid(row=5, column=0, padx=5, pady=5)
 
-                #mmagical defence label
-        monster_dmg_infolabel = tk.Label(stats_panel, text="*Total damage is calculated using Magical and Physical Damage instead of Base Damage", fg="white", bg="black", font=("Courier", 14, "bold"),  wraplength=400)
-        monster_dmg_infolabel.grid(row=6, column=0, padx=10, pady=10)
+                #monster shield label
+        monstershield_label = tk.Label(stats_panel, text=f"Shield: {monstershield}", fg="white", bg="black", font=("Courier", 14, "bold"))
+        monstershield_label.grid(row=6, column=0, padx=5, pady=5)
+
         #Run window
         window.mainloop()
+    monster_imgs_lab.bind("<Button-3>", monsterStatsWindow)#this makes it so right clicking the monster img will pop up the stats window for the monster  
+
+    def characterStatsWindow(event):    #for the monster stats button - event is because when binding always need to have event in the function
+        global monstername
+        nonlocal mhp
+        nonlocal mmp
+        nonlocal mphysical_defence
+        nonlocal mmagical_defence
+        nonlocal mphysical_dmg
+        nonlocal mmagical_dmg
+        nonlocal monsterlvl
+        nonlocal playershield
+
+                #Create Stats window Window
+        statswindow = tk.Tk()
+        statswindow.title("Stats Window")
+        statswindow.geometry ("800x700")
+        statswindow.configure(bg="black")
+        statswindow.resizable(False, False)
+
+        #title
+        title = tk.Label(statswindow, text="Stats Window", fg="white", bg="black", font=("Courier", 30, "bold"))
+        title.place(relx=0.5, rely=0.15, anchor="center")
+
+        #---------------------------------stats to show - going to be in a grid---------------------------------
+        #holds lvl, name, and exp needed
+        lvl_label = tk.Label(statswindow, text=f"Name: {name} Lv. {currentlvl} EXP: {currentexp} / {expneeded}", fg="white", bg="black", font=("Courier", 16, "bold"))
+        lvl_label.place(relx=0.5, rely=0.3, anchor="center")
+
+        #divider
+        divider = tk.Frame(statswindow, height=2, bg="white", bd=0)
+        divider.place(relx=0.0, relwidth=1.0, rely=0.325)
+
+        #panel stats will go on
+        stats_panel = tk.Frame(statswindow, bg="black")
+        stats_panel.place(relx=0.5, rely=0.72, anchor="center")
+ 
+        #hp label
+        hp_label = tk.Label(stats_panel, text=f"HP: {hp}", fg="white", bg="black", font=("Courier", 14, "bold"))
+        hp_label.grid(row=0, column=0, padx=5, pady=5)
+
+        #mp label
+        mp_label = tk.Label(stats_panel, text=f"MP: {mp}", fg="white", bg="black", font=("Courier", 14, "bold"))
+        mp_label.grid(row=1, column=0, padx=5, pady=5)
+
+        #basedmg label
+        basedmg_label = tk.Label(stats_panel, text=f"Base Damage: {basedmg}", fg="white", bg="black", font=("Courier", 14, "bold"))
+        basedmg_label.grid(row=2, column=0, padx=5, pady=5)
+
+        # physical defence label
+        physical_defence_label = tk.Label(stats_panel, text=f"Physical Defence: {physical_defence}", fg="white", bg="black", font=("Courier", 14, "bold"))
+        physical_defence_label.grid(row=3, column=0, padx=5, pady=5)
+
+        #magical defence label
+        magical_defence_label = tk.Label(stats_panel, text=f"Magical Defence: {magical_defence}", fg="white", bg="black", font=("Courier", 14, "bold"))
+        magical_defence_label.grid(row=4, column=0, padx=5, pady=5)
+
+        #player shield label
+        playershield_label = tk.Label(stats_panel, text=f"Shield: {playershield}", fg="white", bg="black", font=("Courier", 14, "bold"))
+        playershield_label.grid(row=5, column=0, padx=5, pady=5)
+
+        #Run window
+        window.mainloop()
+
+    characterimgs_lab.bind("<Button-3>", characterStatsWindow) #this makes it so right clicking the monster img will pop up the stats window for the monster  
 
     #counts down timer and creates/destroys timer label
     def countdown():
@@ -2672,10 +2738,6 @@ def fightscreen():
     #end fight 
     endfight_but = tk.Button(window, text="End Fight", bg="#00A8FF", font=("Ariel", 16, "bold"), command=end_fight, bd=2, width=10, height=2)
     endfight_but.place(relx=0.32, rely=0.95, relheight=0.07, relwidth=0.08, anchor="center")
-
-    #check monter stats 
-    monsterstats_but = tk.Button(window, text="Monster Stats", bg="#00A8FF", font=("Ariel", 16, "bold"), command=monsterStatsWindow, bd=2, width=11, height=2)
-    monsterstats_but.place(relx=0.225, rely=0.95, relheight=0.07, relwidth=0.11, anchor="center")
 
     character_turn() #this is what actually starts the fight - its here because when the fight needs to end gonna send it back to fighting screen so i can properly destroy everything.
                       
