@@ -32,10 +32,8 @@ import math
     you can find your current shield by right clicking your character image and it will show you the current shield value, same for monster shields
 7. want to make the graphics more better, i might include giphs and maybe a video like wakfu that introduces the game - and for fighting when you click spell fasts the animations dont glitch and instead they are just done way faster. 
 8. make it so that in logic screen they can make their own login which will be saved - think will just make an extra button and will be named new account or something, will have a new window popup which will ask if the info and confirm it twice. if user1 != user2 then it will prompt that they need to retype either for example
-9. create the monster stats button and def in main screen - make it so that the stats will be changed depending on the difficulty selected - would also like an option where once change the difficulty the stats window will be automatically updated   
+9. create the monster stats button and def in main screen - make it so that the stats will be changed depending on the difficulty selected - would also like it where once change the difficulty the stats window will be automatically updated   - basically use strigvar and will need a def to update stats        
 
-        5. Change spell arrays - going to make the variables empty - make a  def which inside i will reinitialize the array with =- call it immidiately- then just need to paste the def in character screen to change the values after every fight
-        6. do the same thing above for monster array ^ - can put it in the same def actually
         7. even if you win and when you're supossed to get a lvl up the exp value does change but the other stats dont, lvl aside i think its because need to reissue the array
 
             2.Animations - 
@@ -68,12 +66,15 @@ password = "password"
 username = "username"
 logginerrortxt = "Unable to login at this time, Please try again later."
 name = ""
+gender = "" #for whenever they select a gender
+character_selected = "" #for when a character gets selected below
 
 #character stats and precalcultions
 currentlvl = 1
 pastlvl = 1
 hp = 0
-    #defences decreases dmg received - need to caluclate it in dmg taken - ex: defence = - (physical_defence*0.5) - wil use an if in the fight, if attack type = this the use physical defence
+
+ #defences decreases dmg received - need to caluclate it in dmg taken - ex: defence = - (physical_defence*0.5) - wil use an if in the fight, if attack type = this the use physical defence
 physical_defence = 0
 magical_defence = 0
 mp = 0
@@ -266,6 +267,22 @@ healerspells = [
         "Spell Icon": "Images/Healer Spell Icons/Heal.png"
     }
 ]
+
+spellBonus = ""
+def spellBonusDescriptions():
+    global character_selected
+    global spellBonus
+
+    if character_selected == "Warrior":
+        spellBonus = "Bonuses: Base damage is" \
+        " multiplied by 1.5 and all spells will use base damage and generate" \
+        " MP but the mp is generated at 2 per spell instead of 3 per spell."
+    elif character_selected == "Mage":
+        spellBonus = "Bonuses: Magic damage is " \
+        "increased by half of the magic used."     
+    elif character_selected == "Healer":
+        spellBonus = "Bonuses: Each spell has a healing bonus which is" \
+        " the MP used multiplied by your current lvl * 1.5 and is applied to every spell."
 
 fightstatus = None #will be updated to empty(no fight is happening), fight started, or fight ended - this is to tell if a fight is happening or not
 fightWon = False #this is to tell if fight was won or not, seperate from fight status
@@ -524,9 +541,7 @@ def loadingpage():
     except ValueError:
        messagebox.showerror("Error", logginerrortxt)
 
-character_selected = "" #for when a character gets selected below
 info_labtxt = None
-gender = "" #for whenever they select a gender
 
 #character screen, can make it inide an if later once im able to save information can have it where if dont have a character go to this page but if not automatically logins in
 def characterscreen():
@@ -553,6 +568,7 @@ def characterscreen():
          global character_selected
          global info_labtxt
          gender = "Male"
+         
          #update all pictures and icons to = male version
   
         #had to do multiple ifs because if they didnt select a class had to make it only change preview then on top if that if they chose gender first it would only change the first preview so had to change all of them then add the one for that class i actually wanted to change third so that would be the last img changed and would how that img on the label instead of other classes
@@ -958,16 +974,17 @@ def characterscreen():
         global character_selected
         global info_labtxt
         global gender
+        global spellBonus
         character_selected = "Warrior"
 
+        #here to change the bonus description for the spells when the class is selected
+        spellBonusDescriptions()
         #switches the label text
         info_labtxt.set("The Warrior is a class focused on delivering high" \
         " physical damage. Unlike the mage class, it doesn't rely all on" \
         " mp to cast spells. While highly durable, they have no built-in" \
         " healing abilities. As they do not rely on mp they have little" \
-        " protecting against magical attacks.\n\n Bonuses: Base damage is" \
-        " multiplied by 1.5 and all spells will use base damage and generate" \
-        " MP but the mp is generated at 2 per spell instead of 3 per spell" \
+        f" protecting against magical attacks.\n\n {spellBonus}" \
         " \n\n\n Difficulty: Low\n\n")
 
         if gender == "Female":
@@ -990,16 +1007,18 @@ def characterscreen():
         global character_selected
         global gender
         global info_labtxt
+        global spellBonus
 
         #switches the label text
         character_selected = "Mage"
+        spellBonusDescriptions()
 
         info_labtxt.set("The Mage is a class focused on delivering explosive " \
         "magical damage from a distance. Unlike physical classes, it relies " \
         "heavily on a large mp pool to cast its powerful destructive spells. " \
         "While they possess incredible offensive capabilities, they have a very " \
-        "low health pool and weak physical defenses.\n\n Bonuses: Magic damage is " \
-        "increased by half of the magic used.\n\n\n Difficulty: Medium\n\n")
+        f"low health pool and weak physical defenses.\n\n {spellBonus}" \
+        " \n\n\n Difficulty: Medium\n\n")
 
         if gender == "Female":
             #switches the preview img for mage
@@ -1021,15 +1040,17 @@ def characterscreen():
         global character_selected
         global gender
         global info_labtxt
+        global spellBonus
         character_selected = "Healer"
+
+        spellBonusDescriptions()# here to change the bonus description for the spells when the class is selected
 
         #switches the label text
         info_labtxt.set("The Healer is a class focused on self heals and deals low damage for" \
         " long term fights. It relies on a steady use of mp to cast restorative spells and protective" \
         " barriers during combat. While they can constantly recover from damage, they possess very" \
         " low physical and magical damage output but can do a 1 time burst damage with the cost of" \
-        " half their life and all their mp.\n\n Bonuses: Each spell has a healing bonus which is" \
-        " the MP used multiplied by your current lvl * 1.5 and is applied to every spell\n\n\n" \
+        f" half their life and all their mp.\n\n {spellBonus}\n\n\n" \
         " Difficulty:  high\n\n")
 
         if gender == "Female":
@@ -1356,6 +1377,9 @@ def mainscreen():
                                     f"Description: {healerspells[4]['Description']}", fg="white", bg="black", font=("Courier", 12, "bold"), wraplength=500, justify="left", anchor="w")
             advanceshield_label.grid(row=1, column=1, padx=5, pady=5)
 
+        spellsbonus_lab = tk.Label(spellswindow, text=f"Class Bonus: {spellBonus}", font = ("Ariel", 10, "bold"),  wraplength=6300, fg="black", bg="purple") #compount top basically makes everything stack on top of each other and whatever goes first is at top
+        spellsbonus_lab.place(relx=0.5, rely=0.92, anchor="center")  
+
     #def spellWindow(): #spells window pops up to show spells
     spells_but = tk.Button(window, text="Spells", bg="#00A8FF", font=("Ariel", 16, "bold"), command=spellsWindow, bd=2)
     spells_but.place(relx=0.21, rely=0.86, anchor="center")
@@ -1499,7 +1523,12 @@ def fightscreen():
 
             #shield is used the same as hp but it doesnt kill u if it reaces 0, its used in place of hp.
             playershield = 0
+            playershield_text = tk.StringVar()
+            playershield_text.set(f"Shield: {playershield}")  
+
             monstershield = 0
+            monstershield_text = tk.StringVar()
+            monstershield_text.set(f"Shield: {monstershield}")  
 
         #------------set background-----------
         #mob fight background
@@ -1701,10 +1730,14 @@ def fightscreen():
 
     #label for the character hp
     hplab_text = tk.StringVar()
-    hplab_text.set(f"{fighthp}")
+    hplab_text.set(f"{fighthp:.2f}")
 
-    hp_lab= tk.Label(window, textvariable=f"{hplab_text}", font = ("Ariel", 16, "bold"), fg="black", bg="purple")
-    hp_lab.place(relx=0.4, rely=0.95, anchor="center")  
+    hp_lab= tk.Label(window, textvariable=hplab_text, font = ("Ariel", 16, "bold"), fg="black", bg="purple")
+    hp_lab.place(relx=0.4, rely=0.95, anchor="center") 
+
+    #this is used in character stats window
+    hp_text = tk.StringVar()
+    hp_text.set(f"HP: {fighthp:.2f}")
 
     #vs label
     vs_lab= tk.Label(window, text="vs", font = ("Ariel", 16, "bold"), fg="black", bg="purple")
@@ -1712,10 +1745,14 @@ def fightscreen():
     
     #label for the monster hp
     mhplab_text = tk.StringVar()
-    mhplab_text.set(f"{mhp}")
+    mhplab_text.set(f"{mhp:.2f}")
 
-    mhp_lab= tk.Label(window, textvariable=f"{mhplab_text}", font = ("Ariel", 16, "bold"), fg="black", bg="purple")
+    mhp_lab= tk.Label(window, textvariable=mhplab_text, font = ("Ariel", 16, "bold"), fg="black", bg="purple")
     mhp_lab.place(relx=0.6, rely=0.95, anchor="center")  
+
+    #this is for monster hp in stats window
+    mhp_text = tk.StringVar()
+    mhp_text.set(f"HP: {mhp}")  
 
     #----------------------------Turn label & img -----------------------------------------------
     #label for turns - should say turn then will make a counter that will update it text=f"Turn", textvariable=
@@ -1783,10 +1820,18 @@ def fightscreen():
         nonlocal mhp
         nonlocal mmp
 
+        #updates all visible texts on the screen for hp/mp/shield
         hplab_text.set(f"{fighthp:.2f}")
+        hp_text.set(f"HP: {fighthp:.2f}")
+
         mhplab_text.set(f"{mhp:.2f}")
+        mhp_text.set(f"HP: {mhp:.2f}")  
+
         fightmp_text.set(f"MP: {fightmp}")
         mmp_text.set(f"MP: {mmp}")
+
+        playershield_text.set(f"Shield: {playershield:.2f}")  
+        monstershield_text.set(f"Shield: {monstershield:.2f}")  
         
         if fighthp <= 0 or mhp <= 0:
             end_fight()
@@ -1864,7 +1909,7 @@ def fightscreen():
         nonlocal mphysical_defence, mmagical_defence, mphysical_dmg, mmagical_dmg 
 
                 #Create Stats window Window
-        statswindow = tk.Tk()
+        statswindow = tk.Toplevel(window)
         statswindow.title("Stats Window")
         statswindow.geometry ("800x700")
         statswindow.configure(bg="black")
@@ -1889,32 +1934,32 @@ def fightscreen():
  
         #mhp label
 
-        mhp_label = tk.Label(stats_panel, text=f"HP: {mhp}", fg="white", bg="black", font=("Courier", 14, "bold"))
+        mhp_label = tk.Label(stats_panel, textvariable=mhp_text, fg="white", bg="black", font=("Courier", 14, "bold"))
         mhp_label.grid(row=0, column=0, padx=5, pady=5)
 
         #mmp label for stats window
-        mmp_statsWindow_label = tk.Label(stats_panel, text=f"MP: {mmp}", fg="white", bg="black", font=("Courier", 14, "bold"))
+        mmp_statsWindow_label = tk.Label(stats_panel, textvariable=mmp_text, fg="white", bg="black", font=("Courier", 14, "bold"))
         mmp_statsWindow_label.grid(row=1, column=0, padx=5, pady=5)
+
+        #monster shield label
+        monstershield_label = tk.Label(stats_panel, textvariable=monstershield_text, fg="white", bg="black", font=("Courier", 14, "bold"))
+        monstershield_label.grid(row=2, column=0, padx=5, pady=5)        
 
         #mphysical dmg label
         mmphysical_dmg_label = tk.Label(stats_panel, text=f"Physical Damage: {mphysical_dmg}", fg="white", bg="black", font=("Courier", 14, "bold"))
-        mmphysical_dmg_label.grid(row=2, column=0, padx=5, pady=5)
+        mmphysical_dmg_label.grid(row=3, column=0, padx=5, pady=5)
 
         #mmagical dmg label
-        mmagical_dmg_label = tk.Label(stats_panel, text=f"Physical Damage: {mmagical_dmg}", fg="white", bg="black", font=("Courier", 14, "bold"))
-        mmagical_dmg_label.grid(row=3, column=0, padx=5, pady=5)
+        mmagical_dmg_label = tk.Label(stats_panel, text=f"Magical Damage: {mmagical_dmg}", fg="white", bg="black", font=("Courier", 14, "bold"))
+        mmagical_dmg_label.grid(row=4, column=0, padx=5, pady=5)
 
         # mphysical defence label
         mphysical_defence_label = tk.Label(stats_panel, text=f"Physical Defence: {mphysical_defence}", fg="white", bg="black", font=("Courier", 14, "bold"))
-        mphysical_defence_label.grid(row=4, column=0, padx=5, pady=5)
+        mphysical_defence_label.grid(row=5, column=0, padx=5, pady=5)
 
         #mmagical defence label
         mmagical_defence_label = tk.Label(stats_panel, text=f"Magical Defence: {mmagical_defence}", fg="white", bg="black", font=("Courier", 14, "bold"))
-        mmagical_defence_label.grid(row=5, column=0, padx=5, pady=5)
-
-                #monster shield label
-        monstershield_label = tk.Label(stats_panel, text=f"Shield: {monstershield}", fg="white", bg="black", font=("Courier", 14, "bold"))
-        monstershield_label.grid(row=6, column=0, padx=5, pady=5)
+        mmagical_defence_label.grid(row=6, column=0, padx=5, pady=5)
 
         #Run window
         window.mainloop()
@@ -1932,7 +1977,7 @@ def fightscreen():
         nonlocal playershield
 
                 #Create Stats window Window
-        statswindow = tk.Tk()
+        statswindow = tk.Toplevel(window) #makes it so the stats window is on top of the main window and not a new window
         statswindow.title("Stats Window")
         statswindow.geometry ("800x700")
         statswindow.configure(bg="black")
@@ -1956,28 +2001,28 @@ def fightscreen():
         stats_panel.place(relx=0.5, rely=0.72, anchor="center")
  
         #hp label
-        hp_label = tk.Label(stats_panel, text=f"HP: {hp}", fg="white", bg="black", font=("Courier", 14, "bold"))
+        hp_label = tk.Label(stats_panel, textvariable=hp_text, fg="white", bg="black", font=("Courier", 14, "bold"))
         hp_label.grid(row=0, column=0, padx=5, pady=5)
 
+        #player shield label
+        playershield_label = tk.Label(stats_panel, textvariable=playershield_text, fg="white", bg="black", font=("Courier", 14, "bold"))
+        playershield_label.grid(row=1, column=0, padx=5, pady=5)
+
         #mp label
-        mp_label = tk.Label(stats_panel, text=f"MP: {mp}", fg="white", bg="black", font=("Courier", 14, "bold"))
-        mp_label.grid(row=1, column=0, padx=5, pady=5)
+        mp_label = tk.Label(stats_panel, textvariable=fightmp_text, fg="white", bg="black", font=("Courier", 14, "bold"))
+        mp_label.grid(row=2, column=0, padx=5, pady=5)
 
         #basedmg label
         basedmg_label = tk.Label(stats_panel, text=f"Base Damage: {basedmg}", fg="white", bg="black", font=("Courier", 14, "bold"))
-        basedmg_label.grid(row=2, column=0, padx=5, pady=5)
+        basedmg_label.grid(row=3, column=0, padx=5, pady=5)
 
         # physical defence label
         physical_defence_label = tk.Label(stats_panel, text=f"Physical Defence: {physical_defence}", fg="white", bg="black", font=("Courier", 14, "bold"))
-        physical_defence_label.grid(row=3, column=0, padx=5, pady=5)
+        physical_defence_label.grid(row=4, column=0, padx=5, pady=5)
 
         #magical defence label
         magical_defence_label = tk.Label(stats_panel, text=f"Magical Defence: {magical_defence}", fg="white", bg="black", font=("Courier", 14, "bold"))
-        magical_defence_label.grid(row=4, column=0, padx=5, pady=5)
-
-        #player shield label
-        playershield_label = tk.Label(stats_panel, text=f"Shield: {playershield}", fg="white", bg="black", font=("Courier", 14, "bold"))
-        playershield_label.grid(row=5, column=0, padx=5, pady=5)
+        magical_defence_label.grid(row=5, column=0, padx=5, pady=5)
 
         #Run window
         window.mainloop()
