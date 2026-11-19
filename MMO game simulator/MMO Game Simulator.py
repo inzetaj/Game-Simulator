@@ -6,12 +6,18 @@ from better_profanity import profanity
 import time
 import random
 import math
+import winsound #for music and sound effects
+import cv2
+from PIL import Image, ImageTk
+import pygame
+pygame.mixer.init()
+
 """this i want to fix- will do these later on, not pressing issues
 1. loading page-  want to make the labels in here a bit bigger so no1 strains to see
     -WANT TO CHANGE THE tips so that they rotate regardless of how long the loading takes
     -might need to get rid of the .sleep and instead use a .after or something like i did in fight screen
-2. add music
-3. create a logout button  - gonna make a def and in the def gonna be ifs because each screen think i will want to place it in a diferent place
+3. create a logout button  - gonna make a def and in the def gonna be ifs because each screen think i will want to place it in a diferent place - ACTUALLY will do it like make a def that activates if press esc and it can go to like a menu for settings, logout and whatnot and if press logout it will exit everything. will make another minipopup asking to confirm if actually logging out. - dont need to make a new window for this, can really just be label popups
+    add a setting if turn off music can keep music off
 4. make the game be able to save a game instance associated with a login/pass - would probably make an automatic save in loading page or whatever button you click before switching pages using a def called saving and then another save upon logging out
     want to somehow encrypt my code so that people cant see it
     later on if decide to save information can just save the information from the variables and also include a portion where it updates the database in loading page - when i login can make an if and will take the stats saved in the database and make the variables = to that
@@ -27,15 +33,20 @@ import math
     if you take all of the monsters mp it will skip turn but gain x2 damage
     monster Total damage is calculated using Magical + Physical Damage instead of Base Damage
     -physical or magical defence /2 is subtracted by dmg - the stats for defences /2 is what is being subtracted by your total damage
-    the damage the spells shows in the panels are the predamage before calculating off of monster's resistance so actual damamge will always be lower except the damage calculated in the fight
+    the damage the spells shows in the panels will always change depending on the mob as we didnt make a base spell damage but the spell it will do to the mob.
     to show the stats in fight all you need to do is right click the character/monster image
     you can find your current shield by right clicking your character image and it will show you the current shield value, same for monster shields
 7. want to make the graphics more better, i might include giphs and maybe a video like wakfu that introduces the game - and for fighting when you click spell fasts the animations dont glitch and instead they are just done way faster. 
 8. make it so that in logic screen they can make their own login which will be saved - think will just make an extra button and will be named new account or something, will have a new window popup which will ask if the info and confirm it twice. if user1 != user2 then it will prompt that they need to retype either for example
-9. create the monster stats button and def in main screen - make it so that the stats will be changed depending on the difficulty selected - would also like it where once change the difficulty the stats window will be automatically updated   - basically use strigvar and will need a def to update stats        
+9. create the monster stats button and def in main screen - make it so that the stats will be changed depending on the difficulty selected - would also like it where once change the difficulty the stats window will be automatically updated   - basically use strigvar and will need a def to update stats 
+                 
+        2. Change spell arrays - going to make the variables empty - make a  def which inside i will reinitialize the array with =- call it immidiately- then just need to paste the def in character screen to change the values after every fightc- this is because the values of the spells will change depending on the level of the character and the level of the monster - so that way it will be updated every time a fight is done and a new fight is started. also thinking of going ahead and calculating the spell damage based on the monster and everything with an if so actual damamge is calculated.
+            can go ahead and change the spell damage in the hover tooo
+            might make a variable to show which screen because going to have main screen changes and fight screen changes
+        6. do the same thing above for monster array ^ - can put it in the same def actually - this is so that the values of the monster actually change even if the lvl changes
 
-        7. even if you win and when you're supossed to get a lvl up the exp value does change but the other stats dont, lvl aside i think its because need to reissue the array
-
+        Next -             
+        
             2.Animations - 
                 think will make another def called spell animations so that animations can be called with whatever character
                 when come back to do animations for spells make a variable called mpchange for the label) and add it at the start of spell activationa nd it will change depending on the spell - and maybe have to make another variable for spells that take all mp, perhaps called currentmp or expectedmploss
@@ -68,6 +79,8 @@ logginerrortxt = "Unable to login at this time, Please try again later."
 name = ""
 gender = "" #for whenever they select a gender
 character_selected = "" #for when a character gets selected below
+pastScreenName ="" #this is used for the music effects, but also might be used for more later on - used for conditionals
+screenName =""#this is used for the music effects, but also might be used for more later on
 
 #character stats and precalcultions
 currentlvl = 1
@@ -85,7 +98,6 @@ currentexp = 0
 past_expneeded = 50
 expneeded = past_expneeded*1.5
 lvlupnotification = ""
-
 lvldmg = (currentlvl * 1.5)
 
 #monsters
@@ -147,127 +159,136 @@ monsters = [
     #will create an array for spells below too spells so they can be global
 
 #USED for stat pages and info pages, actual spell dmg and stuff will be inside spell activation def on fight screen
-warriorspells = [
-    {
-        "Name": "Basic Attack",
-        "MP Cost": 0,
-        "Damage": "(Base damage * 1.5)",
-        "Description": "Hits the target without any MP to lightly damage the target.",
-        "Spell Icon": "Images/M_Warrior Spell Icons/m_Basic Attack.png"
-    },
-    {
-        "Name": "Strike",
-        "MP Cost": 1,
-        "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
-        "Description": "Strikes the target quickly with your sword.",
-        "Spell Icon": "Images/M_Warrior Spell Icons/m_Strike.png"
-    },
-    {
-        "Name": "Swordsmanship",
-        "MP Cost": 2,
-        "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
-        "Description": "Uses MP to deal massive damage in a short time.",
-        "Spell Icon": "Images/M_Warrior Spell Icons/m_Swordsmanship.png"
-    },
-    {
-        "Name": "Warrior's Sword",
-        "MP Cost": "100%",
-        "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
-        "Description": "Uses all your MP to deal a very heavy attack.",
-        "Spell Icon": "Images/M_Warrior Spell Icons/m_Warrior's Sword.png"
-    },
-    {
-        "Name": "Advance Shield",
-        "MP Cost": 3,
-        "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
-        "Description": "Hits the target to deal damage and steals some HP with MP and generates a shield with it to advance next turn with. The shield is generated at random but will never be less than half of your outputed damage.",
-        "Spell Icon": "Images/M_Warrior Spell Icons/m_Advance Shield.png"
-    }
-]
+warriorspells = ["Empty"]
+magespells = ["Empty"]
+healerspells = ["Empty"]
+def spellsChange():
+    global warriorspells
+    global magespells
+    global healerspells
 
-magespells = [
-    {
-        "Name": "Staff Attack",
-        "MP Cost": 0,
-        "Damage": "Base Damage",
-        "Description": "Hits the target without any MP to lightly damage the target. Gains 3 MP.",
-        "Spell Icon": "Images/Mage Spell Icons/Staff Attack.png"
+    warriorspells = [
+        {
+            "Name": "Basic Attack",
+            "MP Cost": 0,
+            "Damage": "(Base damage * 1.5)",
+            "Description": "Hits the target without any MP to lightly damage the target.",
+            "Spell Icon": "Images/M_Warrior Spell Icons/m_Basic Attack.png"
+        },
+        {
+            "Name": "Strike",
+            "MP Cost": 1,
+            "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
+            "Description": "Strikes the target quickly with your sword.",
+            "Spell Icon": "Images/M_Warrior Spell Icons/m_Strike.png"
+        },
+        {
+            "Name": "Swordsmanship",
+            "MP Cost": 2,
+            "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
+            "Description": "Uses MP to deal massive damage in a short time.",
+            "Spell Icon": "Images/M_Warrior Spell Icons/m_Swordsmanship.png"
+        },
+        {
+            "Name": "Warrior's Sword",
+            "MP Cost": "100%",
+            "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
+            "Description": "Uses all your MP to deal a very heavy attack.",
+            "Spell Icon": "Images/M_Warrior Spell Icons/m_Warrior's Sword.png"
+        },
+        {
+            "Name": "Advance Shield",
+            "MP Cost": 3,
+            "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
+            "Description": "Hits the target to deal damage and steals some HP with MP and generates a shield with it to advance next turn with. The shield is generated at random but will never be less than half of your outputed damage.",
+            "Spell Icon": "Images/M_Warrior Spell Icons/m_Advance Shield.png"
+        }
+    ]
 
-    },
-    {
-        "Name": "MP Drain",
-        "MP Cost": 3,
-        "Damage": "(lvl * 1.5) lowered by 70%",
-        "Description": "Drains the target of MP equal to tripple the MP used. Causes slight damage as the target is being drained. Disables the target for 1 turn due to magic poisoning.",
-        "Spell Icon": "Images/Mage Spell Icons/Mp Drain.png"
+    magespells = [
+        {
+            "Name": "Staff Attack",
+            "MP Cost": 0,
+            "Damage": "Base Damage",
+            "Description": "Hits the target without any MP to lightly damage the target. Gains 3 MP.",
+            "Spell Icon": "Images/Mage Spell Icons/Staff Attack.png"
 
-    },
-    {
-        "Name": "HP Drain",
-        "MP Cost": 5,
-        "Damage": "15 + (lvl * 1.5)",
-        "Description": "Uses magic to drain the target's HP.",
-        "Spell Icon": "Images/Mage Spell Icons/HP Drain.png"
+        },
+        {
+            "Name": "MP Drain",
+            "MP Cost": 3,
+            "Damage": "(lvl * 1.5) lowered by 70%",
+            "Description": "Drains the target of MP equal to tripple the MP used. Causes slight damage as the target is being drained. Disables the target for 1 turn due to magic poisoning.",
+            "Spell Icon": "Images/Mage Spell Icons/Mp Drain.png"
 
-    },
-    {
-        "Name": "Magic Explosion",
-        "MP Cost": 10,
-        "Damage": "30 + (lvl * 1.5)",
-        "Description": "Explodes MP onto the target to deal massive damage.",
-        "Spell Icon": "Images/Mage Spell Icons/Magic Explosion.png"
+        },
+        {
+            "Name": "HP Drain",
+            "MP Cost": 5,
+            "Damage": "15 + (lvl * 1.5)",
+            "Description": "Uses magic to drain the target's HP.",
+            "Spell Icon": "Images/Mage Spell Icons/HP Drain.png"
 
-    },
-    {
-        "Name": "Damage Debuff",
-        "MP Cost": 4, 
-        "Damage": "0", 
-        "Description": "Reduces  Enemy Damage by 40% for two turns",
-        "Spell Icon": "Images/Mage Spell Icons/Damage Debuff.png"
+        },
+        {
+            "Name": "Magic Explosion",
+            "MP Cost": 10,
+            "Damage": "30 + (lvl * 1.5)",
+            "Description": "Explodes MP onto the target to deal massive damage.",
+            "Spell Icon": "Images/Mage Spell Icons/Magic Explosion.png"
 
-    }
-]
+        },
+        {
+            "Name": "Damage Debuff",
+            "MP Cost": 4, 
+            "Damage": "0", 
+            "Description": "Reduces  Enemy Damage by 40% for two turns",
+            "Spell Icon": "Images/Mage Spell Icons/Damage Debuff.png"
 
-healerspells = [
-    {
-        "Name": "Palm Strike",
-        "MP Cost": 0,
-        "Damage": "Base Damage",
-        "Description": "Hits the target without any MP to lightly damage the target.",
-        "Spell Icon": "Images/Healer Spell Icons/Palm Strike.png" 
-    },
-    {
-        "Name": "HP Drain",
-        "MP Cost": 5,
-        "Damage": "(MP Used * 3) + (lvl * 1.5)",
-        "Description": "Drains the target's HP to heal itself.",
-        "Spell Icon": "Images/Healer Spell Icons/Hp Drain.png"
+        }
+    ]
 
-    },
-    {
-        "Name": "Protective Barrier",
-        "MP Cost": 3,
-        "Damage": "0",
-        "Description": "Casts a strong shield to block enemy attacks. The shield equals (MP Used * 3) * (lvl * 1.5).",
-        "Spell Icon": "Images/Healer Spell Icons/Protective Barrier.png"
-    },
-    {
-        "Name": "Sacrificial Lamb",
-        "MP Cost": "100%",
-        "Damage": "Current HP / 2 + (MP Used * 3) + (lvl * 1.5) + shield / 2",
-        "Description": "Sacrifices half of your current HP, shield, and all of your MP to deal one high-damage attack. If you have a barrier, it also consumes half of the barrier. Has a 3-turn cooldown starting from the beginning of the fight.",
-        "Spell Icon": "Images/Healer Spell Icons/Sacrificial Lamb.png"
+    healerspells = [
+        {
+            "Name": "Palm Strike",
+            "MP Cost": 0,
+            "Damage": "Base Damage",
+            "Description": "Hits the target without any MP to lightly damage the target.",
+            "Spell Icon": "Images/Healer Spell Icons/Palm Strike.png" 
+        },
+        {
+            "Name": "HP Drain",
+            "MP Cost": 5,
+            "Damage": "(MP Used * 3) + (lvl * 1.5)",
+            "Description": "Drains the target's HP to heal itself.",
+            "Spell Icon": "Images/Healer Spell Icons/Hp Drain.png"
 
-    },
-    {
-        "Name": "Heal",
-        "MP Cost": 1,
-        "Damage": "0",
-        "Description": "Heals (MP Used * 3) + (lvl * 1.5) HP at the cost of dealing no damage.",
-        "Spell Icon": "Images/Healer Spell Icons/Heal.png"
-    }
-]
+        },
+        {
+            "Name": "Protective Barrier",
+            "MP Cost": 3,
+            "Damage": "0",
+            "Description": "Casts a strong shield to block enemy attacks. The shield equals (MP Used * 3) * (lvl * 1.5).",
+            "Spell Icon": "Images/Healer Spell Icons/Protective Barrier.png"
+        },
+        {
+            "Name": "Sacrificial Lamb",
+            "MP Cost": "100%",
+            "Damage": "Current HP / 2 + (MP Used * 3) + (lvl * 1.5) + shield / 2",
+            "Description": "Sacrifices half of your current HP, shield, and all of your MP to deal one high-damage attack. If you have a barrier, it also consumes half of the barrier. Has a 3-turn cooldown starting from the beginning of the fight.",
+            "Spell Icon": "Images/Healer Spell Icons/Sacrificial Lamb.png"
 
+        },
+        {
+            "Name": "Heal",
+            "MP Cost": 1,
+            "Damage": "0",
+            "Description": "Heals (MP Used * 3) + (lvl * 1.5) HP at the cost of dealing no damage.",
+            "Spell Icon": "Images/Healer Spell Icons/Heal.png"
+        }
+    ]
+
+spellsChange()
 spellBonus = ""
 def spellBonusDescriptions():
     global character_selected
@@ -284,6 +305,37 @@ def spellBonusDescriptions():
         spellBonus = "Bonuses: Each spell has a healing bonus which is" \
         " the MP used multiplied by your current lvl * 1.5 and is applied to every spell."
 
+def sound():
+    global screenName
+    global pastScreenName
+    global monstername
+
+    if pastScreenName != screenName:
+        if screenName == "Loading Screen" or screenName == "Login Screen" :
+            if pastScreenName == "Login Screen" or pastScreenName == "Character Selection Screen":
+                pass#this is here because when go from loading screen to login screen it resets the music, now it wont do that
+            else:
+                pygame.mixer.music.load("game music/login&loading&character.mp3") #loads the song into the mixer
+                pygame.mixer.music.play(-1, fade_ms=2000) #plays the song in a loop -1 is infinite, 0 is once, 1 is twice, etc
+
+        elif screenName == "Character Selection Screen": #going to make this do the sound after the video is uploaded, for now going to go ahead and put it here - reason why i made it in another elif
+            pass#might do a .after and make a mini def in here but for now want it to skip everything till i get video ready - probably gonna put video here too
+            pygame.mixer.music.load("game music/login&loading&character.mp3")
+            pygame.mixer.music.play(-1, fade_ms=2000)
+
+        elif screenName == "Main Screen":
+            pygame.mixer.music.load("game music/mainscreen.mp3")
+            pygame.mixer.music.play(-1, fade_ms=2000)
+
+        elif screenName == "Fight Screen":
+            if monstername == "Krosmo Crusher":
+                pygame.mixer.music.load("game music/bossfight.mp3")
+                pygame.mixer.music.play(-1, fade_ms=2000)
+            else:   
+                pygame.mixer.music.load("game music/mobsfight.mp3")
+                pygame.mixer.music.play(-1, fade_ms=2000)
+        pastScreenName = screenName
+
 fightstatus = None #will be updated to empty(no fight is happening), fight started, or fight ended - this is to tell if a fight is happening or not
 fightWon = False #this is to tell if fight was won or not, seperate from fight status
 numOfFights = 0 #just a personal status later on for people who will want to know how many fights they did.
@@ -299,6 +351,10 @@ window.title("Game Simulator")
 window.geometry ("1408x768")
 window.configure(bg="black")
 window.resizable(False, False)
+
+#for playing sound
+screenName = "Login Screen"
+sound()
 
  #change window background
 bg_image = tk.PhotoImage(file="Images/loginscreenbg.png")
@@ -363,21 +419,19 @@ login_but.config(command=login)
 def loadingpage():
     global character_selected
     global fightstatus
-    global currentlvl
-    global pastlvl
-    global hp
-    global magical_defence
-    global physical_defence
-    global basedmg
-    global monstername
-    global monsters
+    global currentlvl, pastlvl
+    global hp, magical_defence, physical_defence, basedmg
+    global monstername, monsters
     #for counting exp after battler
-    global expneeded
-    global currentexp
-    global past_expneeded
+    global expneeded, currentexp, past_expneeded
     global chosen_monster
     global lvlupnotification
     global pressedEndFight
+    global screenName
+    
+    #for playing sound
+    screenName = "Loading Screen"
+    sound()
 
     print(f"{fightstatus}") #for testing that the fight status  is being updated incase screens aren't witching properly
     
@@ -496,7 +550,7 @@ def loadingpage():
                     expneeded = past_expneeded*1.5
                     currentexp = 0
                     lvlupnotification = "You Have Leveled Up!"
-                    currentlvl + 1
+                    currentlvl += 1
 
                 elif currentexp > expneeded:
                     #resets past exp to cureent exp needed then update expneeded again to have a new value
@@ -506,20 +560,19 @@ def loadingpage():
                     #reset exp to the overflow exp then lvl up
                     surplusexp = currentexp - expneeded
                     currentexp = surplusexp
-                    currentlvl + 1
+                    currentlvl += 1
 
             if currentlvl > pastlvl:
-                hp*1.5
-                magical_defence*1.5
-                physical_defence*1.5
-                basedmg*1.5
+                hp*=1.5
+                magical_defence*=1.5
+                physical_defence*=1.5
+                basedmg*=1.5
                 pastlvl = currentlvl
 
         # make it destroy everything again when its done
         clearWindow()
         window.update_idletasks() 
 
-        
         # for choosing which screen to go to
         if character_selected == "":
             characterscreen()
@@ -545,8 +598,14 @@ info_labtxt = None
 
 #character screen, can make it inide an if later once im able to save information can have it where if dont have a character go to this page but if not automatically logins in
 def characterscreen():
-        #--------------character screen besides button-------------
 
+    global screenName
+    
+    #for playing sound
+    screenName = "Character Selection Screen"
+    sound()
+
+        #--------------character screen besides button-------------
      #replace background img 
     characterscreenbg = tk.PhotoImage(file="Images/loadingbg.png")
     characterscreenbg_lab = tk.Label(window, image=characterscreenbg)
@@ -1107,6 +1166,11 @@ def mainscreen():
     global gender
     global difficulty
     global numOfFights
+    global screenName
+    
+    #for playing sound
+    screenName = "Main Screen"
+    sound()
 
           #replace background img 
     mainscreenimg = tk.PhotoImage(file="Images/mainscreenbg.png")
@@ -1389,7 +1453,6 @@ def mainscreen():
     stats_but.place(relx=0.28, rely=0.86, anchor="center")
 
     #----------------------monster----------------
-
         #label for monster name 
     namelabel_text = tk.StringVar()
     namelabel_text.set(f"{monstername} Lv. {currentlvl}")
@@ -1477,6 +1540,11 @@ def fightscreen():
     global pressedEndFight
     global fightHpandMpset
     global gender#this because when creating buttons some genders have different colors than their other gender counterpart
+    global screenName
+    
+    #for playing sound
+    screenName = "Fight Screen"
+    sound()
 
     #this because of end fight button sends back to fight screen
     if pressedEndFight == False:
@@ -1872,16 +1940,16 @@ def fightscreen():
         #-------------exp calculations ------------- 
         def lvl_exp_decrease():
             #lvl and exp decrease
-            currentlvl - 1
-            pastlvl - 1
-            currentexp - baseexpgained*difficulty_multiplier
+            currentlvl -= 1
+            pastlvl -= 1
+            currentexp -= baseexpgained*difficulty_multiplier
             currentexp =  expneeded + currentexp
 
-            #stats dec
-            hp/1.5
-            magical_defence/1.5
-            physical_defence/1.5
-            basedmg/1.5     
+            #stats decrease
+            hp/=1.5
+            magical_defence/=1.5
+            physical_defence/=1.5
+            basedmg/=1.5     
 
         if fighthp > 0 and mhp <= 0:
             fightWon = True
