@@ -12,7 +12,10 @@ from PIL import Image, ImageTk
 import pygame
 pygame.mixer.init()
 
-"""this i want to fix- will do these later on, not pressing issues
+
+
+"""
+this i want to fix- will do these later on, not pressing issues
 1. loading page-  want to make the labels in here a bit bigger so no1 strains to see
     -WANT TO CHANGE THE tips so that they rotate regardless of how long the loading takes
     -might need to get rid of the .sleep and instead use a .after or something like i did in fight screen
@@ -35,17 +38,16 @@ pygame.mixer.init()
     -physical or magical defence /2 is subtracted by dmg - the stats for defences /2 is what is being subtracted by your total damage
     the damage the spells shows in the panels will always change depending on the mob as we didnt make a base spell damage but the spell it will do to the mob.
     to show the stats in fight all you need to do is right click the character/monster image
+    the difficulty dropdown increases by values of .50, starting with easy at .50 so it reduced everything by hand and normal is 1, so all numbers stay the same.
     you can find your current shield by right clicking your character image and it will show you the current shield value, same for monster shields
 7. want to make the graphics more better, i might include giphs and maybe a video like wakfu that introduces the game - and for fighting when you click spell fasts the animations dont glitch and instead they are just done way faster. 
 8. make it so that in logic screen they can make their own login which will be saved - think will just make an extra button and will be named new account or something, will have a new window popup which will ask if the info and confirm it twice. if user1 != user2 then it will prompt that they need to retype either for example
 9. create the monster stats button and def in main screen - make it so that the stats will be changed depending on the difficulty selected - would also like it where once change the difficulty the stats window will be automatically updated   - basically use strigvar and will need a def to update stats 
-                 
-        2. Change spell arrays - going to make the variables empty - make a  def which inside i will reinitialize the array with =- call it immidiately- then just need to paste the def in character screen to change the values after every fightc- this is because the values of the spells will change depending on the level of the character and the level of the monster - so that way it will be updated every time a fight is done and a new fight is started. also thinking of going ahead and calculating the spell damage based on the monster and everything with an if so actual damamge is calculated.
-            can go ahead and change the spell damage in the hover tooo
-            might make a variable to show which screen because going to have main screen changes and fight screen changes
-        6. do the same thing above for monster array ^ - can put it in the same def actually - this is so that the values of the monster actually change even if the lvl changes
+10. Check to make sure lvl up works properly. also check to make sure lose fight works properly - thinking about changing it to instead of losing a lvl on loosing u lose the exp you would have gained and if not enough u go own a lvl and and exp is contuied to be subtracted and stats are reduced, if lvl 1nothing will happen but lvl decrease, think will just make the exp go into the negative
+11. thinking of including another video after the first loading screen is done showing you awakening as your character
 
-        Next -             
+        Next - 
+            1. once get the video for character creation page fix the sound and incorparte it in sound def            
         
             2.Animations - 
                 think will make another def called spell animations so that animations can be called with whatever character
@@ -82,9 +84,11 @@ character_selected = "" #for when a character gets selected below
 pastScreenName ="" #this is used for the music effects, but also might be used for more later on - used for conditionals
 screenName =""#this is used for the music effects, but also might be used for more later on
 
+fightLogTxt = ""#this is used to store the text from the fightlog
 #character stats and precalcultions
 currentlvl = 1
 pastlvl = 1
+monsterlvl = currentlvl
 hp = 0
 
  #defences decreases dmg received - need to caluclate it in dmg taken - ex: defence = - (physical_defence*0.5) - wil use an if in the fight, if attack type = this the use physical defence
@@ -98,12 +102,16 @@ currentexp = 0
 past_expneeded = 50
 expneeded = past_expneeded*1.5
 lvlupnotification = ""
+lvlGain = 0#this is used in fight log to print how many lvls you gained.
+lvlLoss = 0#this is used in fight log to print how many lvls you lost.
+
 lvldmg = (currentlvl * 1.5)
 
 #monsters
 monstername = "" # will be the display of what monster is chosen - can use this for calculations, chosen_monster changes a lot
 chosen_monster = "" #is chosen during loading page - will be used to pull out monster stats
 difficulty = "" # saves the difficulty the user chose
+difficulty_multiplier = 0 #this is the multipler that is set depending the difficulty chosen later on
 
 timer = 60 #used in fight calculations
 pressedEndFight = False #used when ending the fight in fight screen so i know the button was pressed
@@ -113,59 +121,27 @@ timenow = datetime.now().strftime("%H:%M:%S") #here so i can use it whenever
 def get_time():#this is used to get the time whenever i need it, like when a spell is casted to print in the fight log
     return datetime.now().strftime("%H:%M:%S") 
 
-monsters = [
-    {#strong magic but phyically weak
-        "name": "Goylca",
-        "lvl": currentlvl, 
-        "hp": 70 + currentlvl*1.5, 
-        "mp": 12, 
-        "physical_defence": 1 + currentlvl*1.5, 
-        "magical_defence": 5 + currentlvl*1.5, 
-        "physical_dmg": 0 + currentlvl*1.5, 
-        "magical_dmg": 5 + currentlvl*1.5, 
-    },
-    {#physical strong but magically weak
-        "name": "Bulmar", 
-        "lvl": currentlvl, 
-        "hp": 100 + currentlvl*1.5, 
-        "mp": 12, 
-        "physical_defence": 5 + currentlvl*1.5, 
-        "magical_defence": 1, 
-        "physical_dmg": 5 + currentlvl*1.5, 
-        "magical_dmg": 0 + currentlvl*1.5, 
-    },
-    {#boss
-        "name": "Krosmo Crusher", 
-        "lvl": currentlvl, 
-        "hp": 130 + currentlvl*1.5, 
-        "mp": 12 + currentlvl*1.5, 
-        "physical_defence": 10 + currentlvl*1.5, 
-        "magical_defence": 10 + currentlvl*1.5, 
-        "physical_dmg": 8 + currentlvl*1.5,
-        "magical_dmg": 8 + currentlvl*1.5, 
-    },
-    {#all round tank but weak dmg -
-        "name": "Hierophant",
-        "lvl": currentlvl, 
-        "hp": 110 + currentlvl*1.5, 
-        "mp": 12, 
-        "physical_defence": 5 + currentlvl*1.5, 
-        "magical_defence": 5 + currentlvl*1.5, 
-        "physical_dmg": 3 + currentlvl*1.5, 
-        "magical_dmg": 3 + currentlvl*1.5, 
-    }
-]
-
-    #will create an array for spells below too spells so they can be global
-
-#USED for stat pages and info pages, actual spell dmg and stuff will be inside spell activation def on fight screen
+#USED for stat pages and info pages, actual spell dmg and stuff will be inside spell activation def on fight screen / main screen
 warriorspells = ["Empty"]
 magespells = ["Empty"]
 healerspells = ["Empty"]
-def spellsChange():
-    global warriorspells
-    global magespells
-    global healerspells
+spellDmgDisplay = ["Empty"]#the above spells are used as the base and they never change, this is a temporary variable set to the spells
+
+monsters = ["Empty"]
+mhp = 0.0
+mmp = 0.0
+mphysical_defence = 0.0
+mmagical_defence = 0.0
+mphysical_dmg = 0.0
+mmagical_dmg = 0.0
+
+def arrayUpdates(event=None):
+    global warriorspells, magespells, healerspells, spellDmgDisplay
+    global monsters
+    global difficulty, difficulty_multiplier
+    global monsterlvl
+    global screenName
+    global mhp, mmp, mphysical_defence, mmagical_defence, mphysical_dmg, mmagical_dmg
 
     warriorspells = [
         {
@@ -288,7 +264,187 @@ def spellsChange():
         }
     ]
 
-spellsChange()
+    monsters = [
+        {#strong magic but phyically weak
+            "name": "Goylca",
+            "lvl": currentlvl, 
+            "hp": 70 + currentlvl*1.5, 
+            "mp": 12, 
+            "physical_defence": 1 + currentlvl*1.5, 
+            "magical_defence": 5 + currentlvl*1.5, 
+            "physical_dmg": 0 + currentlvl*1.5, 
+            "magical_dmg": 5 + currentlvl*1.5, 
+        },
+        {#physical strong but magically weak
+            "name": "Bulmar", 
+            "lvl": currentlvl, 
+            "hp": 100 + currentlvl*1.5, 
+            "mp": 12, 
+            "physical_defence": 5 + currentlvl*1.5, 
+            "magical_defence": 1, 
+            "physical_dmg": 5 + currentlvl*1.5, 
+            "magical_dmg": 0 + currentlvl*1.5, 
+        },
+        {#boss
+            "name": "Krosmo Crusher", 
+            "lvl": currentlvl, 
+            "hp": 130 + currentlvl*1.5, 
+            "mp": 12 + currentlvl*1.5, 
+            "physical_defence": 10 + currentlvl*1.5, 
+            "magical_defence": 10 + currentlvl*1.5, 
+            "physical_dmg": 8 + currentlvl*1.5,
+            "magical_dmg": 8 + currentlvl*1.5, 
+        },
+        {#all round tank but weak dmg -
+            "name": "Hierophant",
+            "lvl": currentlvl, 
+            "hp": 110 + currentlvl*1.5, 
+            "mp": 12, 
+            "physical_defence": 5 + currentlvl*1.5, 
+            "magical_defence": 5 + currentlvl*1.5, 
+            "physical_dmg": 3 + currentlvl*1.5, 
+            "magical_dmg": 3 + currentlvl*1.5, 
+        }
+    ]
+
+        #will create an array for spells below too spells so they can be global
+
+    if character_selected == "Warrior":
+        spellDmgDisplay = warriorspells
+    elif character_selected == "Mage":
+        spellDmgDisplay = magespells
+    elif character_selected == "Healer":
+        spellDmgDisplay = healerspells
+
+    """this is going to be used  for spell dmg display calculation - will do this another day
+                nonlocal totaldmg, spelldmg
+            nonlocal mpdmg
+            global monsters
+            nonlocal fightmp, fighthp
+            global currentlvl, basedmg, hp
+            nonlocal player_buffs, player_debuffs, monster_buffs, monster_debuffs
+            global character_selected
+            nonlocal mpused
+            global mmagical_defence, mphysical_defence
+
+            #this is because each spell have either two types of spell damage depending on if they used mp or not
+
+            if spell["Name"] == "Basic Attack" or spell["Name"] == "Staff Attack" or spell["Name"] == "Wand Attack":
+                spelldmg = basedmg*1.5
+
+            elif character_selected == "Warrior": #this is because all of warrior spells uses base dmg while others doesn't + 1.5 bonus multiplier
+                spelldmg = (basedmg*1.5)*1.5 + (currentlvl * 1.5)
+
+            else:
+                spelldmg = (currentlvl * 1.5)
+
+            if mpused > 0: #checks if the mpused is above 0 for mp dmg
+                #for calculating the dmg loss from monster defence
+
+                if mmagical_defence > 0 and mphysical_defence > 0:
+                    totaldmg = spelldmg + mpdmg - (mmagical_defence + mphysical_defence)/2
+
+                elif mmagical_defence > 0:
+                    totaldmg = spelldmg + mpdmg - mmagical_defence/2
+
+                elif mphysical_defence > 0:
+                    totaldmg = spelldmg + mpdmg - mphysical_defence/2
+
+                else: 
+                    totaldmg = spelldmg + mpdmg
+
+            elif mpused == 0: #checks if the mpused is = 0 for no mp dmg
+            
+                #for calculating the dmg loss from monster defence
+                if mmagical_defence > 0 and mphysical_defence > 0:
+                    totaldmg = spelldmg + -(mmagical_defence + mphysical_defence)/2
+
+                elif mmagical_defence > 0:
+                    totaldmg = spelldmg + -mmagical_defence/2
+
+                elif mphysical_defence > 0:
+                    totaldmg =  spelldmg + -mphysical_defence/2
+
+                else: 
+                    totaldmg = spelldmg + 0
+
+            elif mpused == "100%": #this is for the spells that use all mp
+                mpused = fightmp
+                if mmagical_defence > 0 and mphysical_defence > 0:
+                    totaldmg = spelldmg + mpdmg +  - (mmagical_defence + mphysical_defence)/2
+
+                elif mmagical_defence > 0:
+                    totaldmg = spelldmg + mpdmg +  - mmagical_defence/2
+
+                elif mphysical_defence > 0:
+                    totaldmg = spelldmg + mpdmg +  - mphysical_defence/2
+
+                else: 
+                    totaldmg = spelldmg + mpdmg
+
+            #this for adding more damage or reducing damage depending on buffs/debuffs
+            for spellEffects in player_debuffs + player_buffs + monster_buffs:
+                if spellEffects["State"] == "Player Debuff":
+                    if spellEffects["Name"] == "Damage Debuff":
+                        totaldmg *= (1 - spellEffects["Value"])
+                elif spellEffects["State"] == "Player Buff":
+                    pass #i dont know what buffs i will have yet
+                elif spellEffects["State"] == "Monster Buff":
+                    pass #i dont know what buffs i will have yet
+                else:
+                    break
+
+            #this is here because sometimes the total damage will be way below 0 resulting in the spell healing the monster
+            if totaldmg < 0:
+                totaldmg = 0
+    """
+
+    if screenName == "Main Screen" or screenName == "Fight Screen":
+    #This is for monster parts
+        try:
+            difficulty_choice = difficulty.get()
+        except:
+            pass #expecting this to fail the first time but after its called te second time it would fail, the try here so it doesnt crash
+        difficulty_multiplier = 0
+
+        if difficulty_choice == "Easy":
+            difficulty_multiplier = 0.50
+            monsterlvl = currentlvl/2
+
+        elif difficulty_choice == "Normal":
+            difficulty_multiplier = 1 #doesn't increase stats or decrease
+            monsterlvl = currentlvl
+
+        elif difficulty_choice == "Hard":
+            difficulty_multiplier = 1.50
+            monsterlvl = currentlvl*1.50
+
+        elif difficulty_choice == "Difficult":
+            difficulty_multiplier = 2
+            monsterlvl = currentlvl/2 + currentlvl
+
+        #monster stats, assigned new temporary variables so that the main value doesnt change and only the values inside the fight will change
+        index = 0
+        if monstername == "Hierophant":
+            index = 3
+
+        elif monstername == "Goylca":
+            index = 0
+        
+        elif monstername == "Krosmo Crusher":
+            index = 2
+
+        elif monstername == "Bulmar":
+            index = 1
+
+        mhp = monsters[index]["hp"] *difficulty_multiplier
+        mmp = monsters[index]["mp"]*difficulty_multiplier
+        mphysical_defence = monsters[index]["physical_defence"] *difficulty_multiplier
+        mmagical_defence = monsters[index]["magical_defence"] *difficulty_multiplier
+        mphysical_dmg = monsters[index]["physical_dmg"] *difficulty_multiplier
+        mmagical_dmg = monsters[index]["magical_dmg"] *difficulty_multiplier
+
+arrayUpdates()
 spellBonus = ""
 def spellBonusDescriptions():
     global character_selected
@@ -315,8 +471,11 @@ def sound():
             if pastScreenName == "Login Screen" or pastScreenName == "Character Selection Screen":
                 pass#this is here because when go from loading screen to login screen it resets the music, now it wont do that
             else:
-                pygame.mixer.music.load("game music/login&loading&character.mp3") #loads the song into the mixer
-                pygame.mixer.music.play(-1, fade_ms=2000) #plays the song in a loop -1 is infinite, 0 is once, 1 is twice, etc
+                if pastScreenName == "Main Screen":
+                    pass#this is just so that the music doesn't change when starting the fight, feels better to keeo main screen music
+                else:
+                    pygame.mixer.music.load("game music/login&loading&character.mp3") #loads the song into the mixer
+                    pygame.mixer.music.play(-1, fade_ms=2000) #plays the song in a loop -1 is infinite, 0 is once, 1 is twice, etc
 
         elif screenName == "Character Selection Screen": #going to make this do the sound after the video is uploaded, for now going to go ahead and put it here - reason why i made it in another elif
             pass#might do a .after and make a mini def in here but for now want it to skip everything till i get video ready - probably gonna put video here too
@@ -411,15 +570,13 @@ def login():
 #Login Button
 login_but = tk.Button(window, text="Login", bg="#00A8FF", font=("Ariel", 16, "bold"), bd=2, width=10, height=2)
 login_but.place(relx=0.5, rely=0.86, anchor="center")
-
-#Connect login button
 login_but.config(command=login)
 
 #handle loading new pages and in the future will handle after battle calculations
 def loadingpage():
     global character_selected
     global fightstatus
-    global currentlvl, pastlvl
+    global currentlvl, pastlvl, lvlGain
     global hp, magical_defence, physical_defence, basedmg
     global monstername, monsters
     #for counting exp after battler
@@ -541,12 +698,14 @@ def loadingpage():
 
         if fightstatus == "Fight Ended":
             fightstatus = ""
+            lvlGain = 0#resets it so that the number isnt inflated and false
 
+            #checks if they have enough exp to lvl up then changes their lvl
             if currentexp == expneeded or currentexp > expneeded:
-                if currentexp == expneeded:
+                if currentexp == expneeded: #if exp is exactly the same
 
                     #resets past exp to cureent exp needed then update expneeded again to have a new value
-                    past_expneeded = expneeded + 5
+                    past_expneeded = expneeded
                     expneeded = past_expneeded*1.5
                     currentexp = 0
                     lvlupnotification = "You Have Leveled Up!"
@@ -554,20 +713,23 @@ def loadingpage():
 
                 elif currentexp > expneeded:
                     #resets past exp to cureent exp needed then update expneeded again to have a new value
-                    past_expneeded = expneeded + 5
-                    expneeded = past_expneeded*1.5
+                    while currentexp > expneeded: #this is for multiple lvl ups at once, otherwise while isnt really needed
+                        past_expneeded = expneeded
+                        expneeded = past_expneeded*1.5
 
-                    #reset exp to the overflow exp then lvl up
-                    surplusexp = currentexp - expneeded
-                    currentexp = surplusexp
-                    currentlvl += 1
+                        #reset exp to the overflow exp then lvl up
+                        surplusexp = currentexp - expneeded
+                        currentexp = surplusexp
+                        lvlGain += 1
+                        currentlvl += 1
 
-            if currentlvl > pastlvl:
-                hp*=1.5
-                magical_defence*=1.5
-                physical_defence*=1.5
-                basedmg*=1.5
-                pastlvl = currentlvl
+            if currentlvl > pastlvl:#this is so that the player gains the correct number of stats for each lvl
+                while currentlvl != pastlvl: 
+                    hp*=1.5
+                    magical_defence*=1.5
+                    physical_defence*=1.5
+                    basedmg*=1.5
+                    pastlvl += 1
 
         # make it destroy everything again when its done
         clearWindow()
@@ -1165,22 +1327,80 @@ def mainscreen():
     global character_selected
     global gender
     global difficulty
-    global numOfFights
+    global numOfFights, fightLogTxt, lvlLoss, lvlGain
     global screenName
+    global mhp, mmp, mphysical_defence, mmagical_defence, mphysical_dmg, mmagical_dmg
     
     #for playing sound
     screenName = "Main Screen"
     sound()
 
-          #replace background img 
+    #replace background img 
     mainscreenimg = tk.PhotoImage(file="Images/mainscreenbg.png")
     mainscreenimg_lab = tk.Label(window, image=mainscreenimg)
     mainscreenimg_lab.place(x=0, y=0, relwidth=1, relheight=1) # relwidth/height=1 stretches it 100%
-        #without this it wouldnt load for some reason - directly saving the whole bg 
     mainscreenimg_lab.image = mainscreenimg 
 
-    #---------------character------------------
+    #---------------------------------------fight log box-----------------------
+    #this is for the fight log so everyone can see whats happening in the fight, its here because after you the fight you might want to see what happend.
+    fightlog_box = tk.Text(window, width=40, height=10, font = ("Ariel", 12, "bold"), fg="black", bg="purple", wrap="word")
+    fightlog_box.place(relx=0.013, rely=0.14, anchor="w") 
+    fightlog_box.configure(state="disabled")  # lock it so the player can't type in it'
 
+    if numOfFights > 0:
+                #update fightlog
+        fightlog_box.configure(state="normal")    # unlock so it can be written to
+        fightlog_box.insert("end", fightLogTxt) 
+        fightlog_box.see("end")                   # scroll down to the newest line
+        fightlog_box.configure(state="disabled")  # lock it so the player can't type in it'
+    else:                  
+        #update fightlog - this is like a welcome message and a game introduction
+        fightlog_box.configure(state="normal")    # unlock so it can be written to
+        fightlog_box.insert("end", f"{get_time()} ") 
+        fightlog_box.configure(state="disabled")  # lock it so the player can't type in it'
+        
+        linePaused = False #used in the def below to display the timer properly
+        def gameIntroduction(text_widget, messages, delay=50, line_pause=700, msg_idx=0, char_idx=0): #text widget is the fightbox, messages is the value passed on from gameintromessages, delay is the value used in the .timeafter
+            nonlocal linePaused
+            if msg_idx < len(messages):
+                fightlog_box.configure(state="normal")    # unlock so it can be written to
+                current_msg = messages[msg_idx]
+
+                if char_idx < len(current_msg):
+                    if linePaused == True:
+                        text_widget.insert(tk.END, f"{get_time()} ")
+                    text_widget.insert(tk.END, current_msg[char_idx])
+                    text_widget.see(tk.END)
+                    text_widget.after(delay, gameIntroduction, text_widget, messages, delay, line_pause, msg_idx, char_idx + 1)
+                    linePaused = False
+
+                else:
+                    linePaused = True
+                    text_widget.insert(tk.END, "\n")
+                    text_widget.after(line_pause, gameIntroduction, text_widget, messages, delay, line_pause, msg_idx + 1, 0)
+                    
+                fightlog_box.configure(state="disabled")  # lock it so the player can't type in it
+
+        gameIntroductionMessages = [
+            "Connecting to server...",
+            "Access granted!",
+            "Welcome to the Last Standing City.",
+            "You've seen what became of the world when the Omarks invaded.",
+            "Luckly people like you awakened and have the powers to protect humanity.",
+            "Your story begins here.",
+            "Select your difficulty.",
+            "Start the fight.",
+            "And win against the Invaders to reclaim our world!",
+        ]
+
+        #warning message that a monster is approaching. 
+        messagebox.showwarning(
+            "WARNING! WARNING! WARNING!",
+            "A monster is approaching! Prepare yourself for battle!"
+        )
+        gameIntroduction(fightlog_box, gameIntroductionMessages)
+
+    #---------------character------------------
     #label for character name
     namelabel_text = tk.StringVar()
     namelabel_text.set(f"{name} Lv. {currentlvl}")
@@ -1188,7 +1408,7 @@ def mainscreen():
     name_lab= tk.Label(window, textvariable=namelabel_text, font = ("Ariel", 18, "bold"), fg="black", bg="purple") #compount top basically makes everything stack on top of each other and whatever goes first is at top
     name_lab.place(relx=0.25, rely=0.31, anchor="center") # "w" anchors it to the West/Left side
 
-    #picturetheir char - will need to use if to determine which char is shown
+    #picture for their char - will need to use if to determine which char is shown
 
     classimgs_lab= tk.Label(window, image=None, bg="purple")
     classimgs_lab.place(relx=0.25, rely=0.55, anchor="center") # "w" anchors it to the West/Left side    
@@ -1491,23 +1711,52 @@ def mainscreen():
 
     #difficulty dropdown
     difficulty = tk.StringVar() #call difficulty to figure out what was chosen
-    difficulty.set("Normal") #this is what will always appear first
+    difficulty.set("Normal") #this is what will always appear first - it will change once click a new button in the drop down since its a textvariable
     difficulty_options = ["Easy", "Normal", "Hard", "Difficult"] #dropdown options
 
     #dropdown widget
     # Syntax: OptionMenu(parent, stringvar, *list_of_options)
-    dropdown = ttk.Combobox(window, textvariable=difficulty, values=difficulty_options, font=("Courier", 14, "bold"))
+    dropdown = ttk.Combobox(window, textvariable=difficulty, values=difficulty_options, font=("Courier", 14, "bold"), state="readonly")
     dropdown.place(relx=0.75, rely=0.8, anchor="center")
+    dropdown.bind("<<ComboboxSelected>>", arrayUpdates)
+
+    arrayUpdates()#here because after a lvl up the values of monster stats can change so want to update array. 
 
     #announce level ups after battle with an if/else
     if lvlupnotification == "You Have Leveled Up!":
             # The Pop-up box code
         messagebox.showinfo(f"{lvlupnotification}", f"Your current level is LV.{currentlvl}!")
+        #update fightlog
+        fightlog_box.configure(state="normal")    # unlock so it can be written to
+        fightlog_box.insert("end", "You Have Leveled Up!") 
+        if lvlGain == 1: #this is really here so lvls is plural should said lvls
+            fightlog_box.insert("end", "You have gained 1 lvl.")
+        else:
+            fightlog_box.insert("end", f"You have gained {lvlGain} lvls.") 
+
+        fightlog_box.insert("end", f"Your current Level is LVL {currentlvl}.")
+        fightlog_box.see("end")                   # scroll down to the newest line
+        fightlog_box.configure(state="disabled")  # lock it so the player can't type in it'
+
     elif fightWon == False and numOfFights > 0:
-        messagebox.showinfo("You have lost", f"Your current level is LV.{currentlvl}!")
+        messagebox.showinfo("You Have Lost", f"Your current level is LVL {currentlvl}!")
+
+        #update fightlog
+        fightlog_box.configure(state="normal")    # unlock so it can be written to
+        fightlog_box.insert("end", "You Have Lost!") 
+        if lvlLoss == 1: #this is really here so lvls is plural should said lvls
+            fightlog_box.insert("end", "You Have Lost 1 lvl.")
+        else:
+            fightlog_box.insert("end", f"You have gained {lvlGain} lvls.") 
+
+        fightlog_box.insert("end", f"Your current Level is LVL {currentlvl}.")
+        fightlog_box.see("end")                   # scroll down to the newest line
+        fightlog_box.configure(state="disabled")  # lock it so the player can't type in it'
 
     def startfight():
-        global fightstatus
+        global fightstatus, fightLogTxt
+
+        fightLogTxt =  fightlog_box.get("1.0", "end-1c")    # all the text ("end-1c" skips the extra final newline) saves text
 
         try:
             if difficulty != "":
@@ -1525,11 +1774,11 @@ def mainscreen():
     startfight_but.place(relx=0.5, rely=0.47, anchor="center")
 
 def fightscreen():
-    global difficulty
+    global difficulty, difficulty_multiplier
     global monstername
     global magespells, healerspells, warriorspells
     global character_selected
-    global currentlvl
+    global currentlvl, monsterlvl
     global name
     global monsters
     global hp, mp, basedmg, currentexp, pastlvl
@@ -1541,10 +1790,12 @@ def fightscreen():
     global fightHpandMpset
     global gender#this because when creating buttons some genders have different colors than their other gender counterpart
     global screenName
+    global mhp, mmp, mphysical_defence, mmagical_defence, mphysical_dmg, mmagical_dmg
     
     #for playing sound
     screenName = "Fight Screen"
     sound()
+    arrayUpdates() #updates for monster stuff mainly - going to take this part out and keep it in main screen with an iff and everything so that it will change depending on the difficulty - only here temporarily so everything works - can get rid of it once dropdown works correctly
 
     #this because of end fight button sends back to fight screen
     if pressedEndFight == False:
@@ -1644,6 +1895,11 @@ def fightscreen():
     #this is for the fight log so everyone can see whats happening in the fight.
     fightlog_box = tk.Text(window, width=40, height=10, font = ("Ariel", 12, "bold"), fg="black", bg="purple", wrap="word")
     fightlog_box.place(relx=0.018, rely=0.16, anchor="w") 
+    #update fightlog
+    fightlog_box.configure(state="normal")    # unlock so it can be written to
+    fightlog_box.insert("end", f"{get_time()} Fight Has Started!\n") 
+    fightlog_box.see("end")                   # scroll down to the newest line
+    fightlog_box.configure(state="disabled")  # lock it so the player can't type in it
 
     #character image
     if character_selected == "Warrior":
@@ -1697,27 +1953,10 @@ def fightscreen():
 
             window.update()
     
-    #----------------------set monster img/stats/experience gained from that monster/ hp label----------------
-    
+    #----------------------set monster img/stats/experience gained from that monster/ hp label---------------- 
     #difficulty stat diffrentiator(just have to multiple this with the chosen stat) + the experience ammount will get after fight + the lvl that will be displayed
 
     baseexpgained = 30 * (1.20 ** (currentlvl - 1)) #grows by 20% each level
-
-    if difficulty_choice == "Easy":
-        difficulty_multiplier = 0.50
-        monsterlvl = currentlvl/2
-
-    elif difficulty_choice == "Normal":
-        difficulty_multiplier = 1 #doesn't increase stats or decrease
-        monsterlvl = currentlvl
-
-    elif difficulty_choice == "Hard":
-        difficulty_multiplier = 1.25
-        monsterlvl = currentlvl*1.25
-
-    elif difficulty_choice == "Difficult":
-        difficulty_multiplier = 1.50
-        monsterlvl = currentlvl/2 + currentlvl
 
     #label for monster name 
     mnamelabel_text = tk.StringVar()
@@ -1730,66 +1969,30 @@ def fightscreen():
     monster_imgs_lab= tk.Label(window, image=None, bg="purple")
     monster_imgs_lab.place(relx=0.8, rely=0.5, anchor="center")  
 
-    #monster imgs and stats, assigned new temporary variables so that the main value doesnt change and only the values inside the fight will change
+    if monstername == "Hierophant":
+        monster_img = tk.PhotoImage(file="Images/Hierophant.png")
+        monster_imgs_lab.config(image=monster_img)
+        monster_imgs_lab.image = monster_img
 
-    if fightHpandMpset == False: # here so when this screen is called again it doesnt reset monster hp
+    elif monstername == "Goylca":
+        monster_img = tk.PhotoImage(file="Images/Goylca.png")
+        monster_imgs_lab.config(image=monster_img)
+        monster_imgs_lab.image = monster_img
+        
+    elif monstername == "Krosmo Crusher":
+        monster_img = tk.PhotoImage(file="Images/Krosmo Crusher.png")
+        monster_imgs_lab.config(image=monster_img)
+        monster_imgs_lab.image = monster_img
 
-        if monstername == "Hierophant":
+    elif monstername == "Bulmar":
 
-            monster_img = tk.PhotoImage(file="Images/Hierophant.png")
-            monster_imgs_lab.config(image=monster_img)
-            monster_imgs_lab.image = monster_img
+        monster_img = tk.PhotoImage(file="Images/Bulmar.png")
+        monster_imgs_lab.config(image=monster_img)
+        monster_imgs_lab.image = monster_img
 
-            #stats
-            mhp = monsters[3]["hp"]*difficulty_multiplier
-            mmp = monsters[3]["mp"]*difficulty_multiplier
-            mphysical_defence = monsters[3]["physical_defence"] *difficulty_multiplier
-            mmagical_defence = monsters[3]["magical_defence"] *difficulty_multiplier
-            mphysical_dmg = monsters[3]["physical_dmg"] *difficulty_multiplier
-            mmagical_dmg = monsters[3]["magical_dmg"] *difficulty_multiplier
-
-        elif monstername == "Goylca":
-
-            monster_img = tk.PhotoImage(file="Images/Goylca.png")
-            monster_imgs_lab.config(image=monster_img)
-            monster_imgs_lab.image = monster_img
-
-            mhp = monsters[0]["hp"]*difficulty_multiplier
-            mmp = math.ceil(monsters[0]["mp"]*difficulty_multiplier) #want mp to always be a whole number rounded up
-            mphysical_defence = monsters[0]["physical_defence"] *difficulty_multiplier
-            mmagical_defence = monsters[0]["magical_defence"] *difficulty_multiplier
-            mphysical_dmg = monsters[0]["physical_dmg"] *difficulty_multiplier
-            mmagical_dmg = monsters[0]["magical_dmg"] *difficulty_multiplier
-            
-        elif monstername == "Krosmo Crusher":
-
-            monster_img = tk.PhotoImage(file="Images/Krosmo Crusher.png")
-            monster_imgs_lab.config(image=monster_img)
-            monster_imgs_lab.image = monster_img
-
-            mhp = monsters[2]["hp"] *difficulty_multiplier
-            mmp = monsters[2]["mp"]*difficulty_multiplier
-            mphysical_defence = monsters[2]["physical_defence"] *difficulty_multiplier
-            mmagical_defence = monsters[2]["magical_defence"] *difficulty_multiplier
-            mphysical_dmg = monsters[2]["physical_dmg"] *difficulty_multiplier
-            mmagical_dmg = monsters[2]["magical_dmg"] *difficulty_multiplier
-
-        elif monstername == "Bulmar":
-
-            monster_img = tk.PhotoImage(file="Images/Bulmar.png")
-            monster_imgs_lab.config(image=monster_img)
-            monster_imgs_lab.image = monster_img
-
-            mhp = monsters[1]["hp"] *difficulty_multiplier
-            mmp = monsters[1]["mp"]*difficulty_multiplier
-            mphysical_defence = monsters[1]["physical_defence"] *difficulty_multiplier
-            mmagical_defence = monsters[1]["magical_defence"] *difficulty_multiplier
-            mphysical_dmg = monsters[1]["physical_dmg"] *difficulty_multiplier
-            mmagical_dmg = monsters[1]["magical_dmg"] *difficulty_multiplier
-
-        #this is used for stats window so when i spell is cast that that affects monster mp it changes
-        mmp_text = tk.StringVar()
-        mmp_text.set(f"MP: {mmp}")
+    #this is used for stats window so when i spell is cast that that affects monster mp it changes
+    mmp_text = tk.StringVar()
+    mmp_text.set(f"MP: {mhp:.2f}")
 
     #----------------------------basic display labels-----------------------------
     #monster mp label- label     - the variable is already made directy above in previous portion  - theres also another version of this in the monster stats window
@@ -1885,8 +2088,8 @@ def fightscreen():
     def variablesUpdate(): #used whenever something affects a player's or monsters hp/mp and will also do an hp check to see if anyone died
         #could also incorporate the check if a player dies in here too
         nonlocal fighthp
-        nonlocal mhp
-        nonlocal mmp
+        global mhp
+        global mmp
 
         #updates all visible texts on the screen for hp/mp/shield
         hplab_text.set(f"{fighthp:.2f}")
@@ -1912,14 +2115,21 @@ def fightscreen():
         global currentlvl
         global currentexp
         nonlocal fighthp
-        nonlocal mhp
-        global fightWon
+        global mhp
+        global fightWon, fightLogTxt
         global numOfFights
         global pressedEndFight
         global fightHpandMpset
         nonlocal oneSecondCountdown
 
         print("Fight has ended")
+
+        #update fightlog
+        fightlog_box.configure(state="normal")    # unlock so it can be written to
+        fightlog_box.insert("end", f"{get_time()} Fight Has Ended!") 
+        fightlog_box.see("end")                   # scroll down to the newest line
+        fightlog_box.configure(state="disabled")  # lock it so the player can't type in it    
+
         #destroy everything
         try:
             time.sleep(1.5) #makes wait before switching back to main screen
@@ -1938,18 +2148,65 @@ def fightscreen():
             print(e)
 
         #-------------exp calculations ------------- 
-        def lvl_exp_decrease():
-            #lvl and exp decrease
-            currentlvl -= 1
-            pastlvl -= 1
-            currentexp -= baseexpgained*difficulty_multiplier
-            currentexp =  expneeded + currentexp
+        def lvl_exp_decrease(): #lowers lvl, exp, and stats if fail
+            global currentlvl, currentexp, past_expneeded, expneeded, pastlvl, difficulty_multiplier, magical_defence, physical_defence
+            global basedmg, hp, character_selected, mp, lvlLoss
 
-            #stats decrease
-            hp/=1.5
-            magical_defence/=1.5
-            physical_defence/=1.5
-            basedmg/=1.5     
+            lvlLoss = 0#resets so that later on it wont cause it to print wrong lvl loss
+
+            #decrease exp first
+            currentexp -= baseexpgained*difficulty_multiplier
+            negativeCurrentExp = currentexp
+
+            if currentexp < 0: #if current exp is a negative it lowers your lvl - 
+
+                while currentexp < 0: #in a while because if expneeded is way more than 1 lvl it needs to keep going to lvl matches
+                    if currentlvl > 1:
+                        #lvl and exp decrease
+                        currentlvl -= 1
+                        pastlvl -= 1
+
+                        lvlLoss  +=1
+                        
+                        past_expneeded /=1.5 #reduce past exp needed
+                        expneeded = past_expneeded*1.5 #reset exp needed
+                        tempCurrentExp = expneeded #sets to expneeded because that was the max for this lvl - not using current exp because it would exit the loop
+                        tempCurrentExp += negativeCurrentExp #this subtracts the exp (it may say + but thats because the value should be a negative sso its actually +-)
+
+                        #stats decrease
+                        hp/=1.5
+                        magical_defence/=1.5
+                        physical_defence/=1.5
+                        basedmg/=1.5  
+
+                        if tempCurrentExp > 0: #this is so you can exit the loot and set the current exp properly
+                            currentexp = tempCurrentExp
+
+                if currentlvl < 1: #this will be so if exp is taken so much it goes through multiple lvls it will always stop you at lvl 1
+                    currentlvl == 1 #reset lvl to 1
+
+                    #reset exp needed
+                    past_expneeded = 50
+                    expneeded = past_expneeded*1.5
+
+                    #resetting character stats
+                    if character_selected == "Warrior":
+                        hp = 90
+                        physical_defence = 4
+                        magical_defence = 1
+                        mp = 0
+
+                    elif character_selected == "Mage":
+                        hp = 70
+                        physical_defence = 1
+                        magical_defence = 4
+                        mp = 4
+
+                    elif character_selected == "Healer":
+                        hp = 80
+                        physical_defence = 2
+                        magical_defence = 2
+                        mp = 3
 
         if fighthp > 0 and mhp <= 0:
             fightWon = True
@@ -1967,14 +2224,12 @@ def fightscreen():
         numOfFights += 1
         fightstatus = "Fight Ended"
         difficulty_choice = None
+        fightLogTxt =  fightlog_box.get("1.0", "end-1c")    # all the text ("end-1c" skips the extra final newline)
 
         #sends to loading page
         loadingpage()
 
     def monsterStatsWindow(event):    #for the monster stats button - event is because when binding always need to have event in the function
-        global monstername
-        nonlocal mhp, mmp, monsterlvl, monstershield
-        nonlocal mphysical_defence, mmagical_defence, mphysical_dmg, mmagical_dmg 
 
                 #Create Stats window Window
         statswindow = tk.Toplevel(window)
@@ -2034,15 +2289,6 @@ def fightscreen():
     monster_imgs_lab.bind("<Button-3>", monsterStatsWindow)#this makes it so right clicking the monster img will pop up the stats window for the monster  
 
     def characterStatsWindow(event):    #for the monster stats button - event is because when binding always need to have event in the function
-        global monstername
-        nonlocal mhp
-        nonlocal mmp
-        nonlocal mphysical_defence
-        nonlocal mmagical_defence
-        nonlocal mphysical_dmg
-        nonlocal mmagical_dmg
-        nonlocal monsterlvl
-        nonlocal playershield
 
                 #Create Stats window Window
         statswindow = tk.Toplevel(window) #makes it so the stats window is on top of the main window and not a new window
@@ -2155,7 +2401,9 @@ def fightscreen():
         global currentexp, pastlvl, expneeded, currentlvl, basedmg, hp
         global fightstatus
         global timer, timenow
-        nonlocal mhp, fighthp, fightmp, mmp, mphysical_defence, mmagical_defence
+        nonlocal fighthp, fightmp
+        global mhp, mmp, mphysical_defence, mmagical_defence, mphysical_dmg, mmagical_dmg
+
         nonlocal player_buffs, player_debuffs, monster_buffs, monster_debuffs
         nonlocal playershield, monstershield, playerShieldLoss, monsterShieldLoss, playerShieldGain
 
@@ -2178,7 +2426,7 @@ def fightscreen():
             nonlocal player_buffs, player_debuffs, monster_buffs, monster_debuffs
             global character_selected
             nonlocal mpused
-            nonlocal mmagical_defence, mphysical_defence
+            global mmagical_defence, mphysical_defence
 
             #this is because each spell have either two types of spell damage depending on if they used mp or not
 
@@ -2252,7 +2500,8 @@ def fightscreen():
                 totaldmg = 0
 
         def dealDamage():
-            nonlocal totaldmg, mhp
+            nonlocal totaldmg
+            global mhp
             nonlocal playershield, monstershield, playerShieldLoss, monsterShieldLoss, playerShieldGain
 
             if monstershield > 0 and totaldmg > monstershield:
@@ -2490,16 +2739,14 @@ def fightscreen():
     totalAttackCount = 0
     def monster_turn():  #everything from monster attacks and calculating monster damage and more.
         nonlocal fightmp 
-        nonlocal mmp
         nonlocal turn 
         global timer
         nonlocal fighthp
-        nonlocal mhp
         nonlocal pressedEndTurn
         global fightHpandMpset # this is set because when anyone dies dont want the hp to reset
         nonlocal oneSecondCountdown, timerExists
         nonlocal totalAttackCount
-        nonlocal mphysical_dmg, mmagical_dmg
+        global mhp, mmp 
         global time, timenow
         global monstername
         nonlocal playershield, monstershield, playerShieldLoss, monsterShieldLoss, monsterShieldGain
@@ -2582,9 +2829,10 @@ def fightscreen():
             global physical_defence, magical_defence
             global currentlvl
             nonlocal mtotaldmg, fighthp
-            nonlocal mphysical_dmg, mmagical_dmg
             global name
             nonlocal playershield, monstershield, playerShieldLoss, monsterShieldLoss, monsterShieldGain
+            global mhp, mmp, mphysical_defence, mmagical_defence, mphysical_dmg, mmagical_dmg
+
 
             mmpdmg = mmpUsed*1.5
             mbasedmg = (mphysical_dmg + mmagical_dmg)*1.5
