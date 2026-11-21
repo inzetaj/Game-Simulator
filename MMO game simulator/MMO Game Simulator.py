@@ -29,6 +29,7 @@ this i want to fix- will do these later on, not pressing issues
     - you will lose 1 hp every turn due to radiation, so make sure to finish the fight quickly
     - every turn you will gain 1 mp
     - If you hover over spells, info about the spell will pop up
+    if you die you only lose exp, if your exp reaches below 0 you lose a lvl, if you die while lvl one with 0 exp, your lvl doesnt increase.
     Every 4 turns monsters get a damage boost for 1 turn
     monster will always cast bigger mp spells first
     every 2 turns a 4mp spell will be casted and every 3 turns a 5mp spell will be casted by monsters
@@ -36,18 +37,22 @@ this i want to fix- will do these later on, not pressing issues
     if you take all of the monsters mp it will skip turn but gain x2 damage
     monster Total damage is calculated using Magical + Physical Damage instead of Base Damage
     -physical or magical defence /2 is subtracted by dmg - the stats for defences /2 is what is being subtracted by your total damage
-    the damage the spells shows in the panels will always change depending on the mob as we didnt make a base spell damage but the spell it will do to the mob.
+    the damage the spells does in the actual fight will most likely be less than what the labels show due to 
     to show the stats in fight all you need to do is right click the character/monster image
     the difficulty dropdown increases by values of .50, starting with easy at .50 so it reduced everything by hand and normal is 1, so all numbers stay the same.
     you can find your current shield by right clicking your character image and it will show you the current shield value, same for monster shields
 7. want to make the graphics more better, i might include giphs and maybe a video like wakfu that introduces the game - and for fighting when you click spell fasts the animations dont glitch and instead they are just done way faster. 
 8. make it so that in logic screen they can make their own login which will be saved - think will just make an extra button and will be named new account or something, will have a new window popup which will ask if the info and confirm it twice. if user1 != user2 then it will prompt that they need to retype either for example
 9. create the monster stats button and def in main screen - make it so that the stats will be changed depending on the difficulty selected - would also like it where once change the difficulty the stats window will be automatically updated   - basically use strigvar and will need a def to update stats 
-10. Check to make sure lvl up works properly. also check to make sure lose fight works properly - thinking about changing it to instead of losing a lvl on loosing u lose the exp you would have gained and if not enough u go own a lvl and and exp is contuied to be subtracted and stats are reduced, if lvl 1nothing will happen but lvl decrease, think will just make the exp go into the negative
+10.once get the video for character creation page fix the sound and incorparte it in sound def
 11. thinking of including another video after the first loading screen is done showing you awakening as your character
+12.want to make it where in the fight screen if hover over the spell you can see the ammount of damage it does.
+13. prohibit when making names it shouldnt have special characters like "!"
+14. might need to nerf monsters abit, they shouldnt have the dmg to kill players in 1-2 turns, it should be enough dmg to kill them only in t3-4 - should also probably change resistance or something, a spell with a base dmg of 9 did 0 dmg on krosmo
 
         Next - 
-            1. once get the video for character creation page fix the sound and incorparte it in sound def            
+            2. need to include hp gains for player spell  
+            3. include mp gain when casts mb drain  
         
             2.Animations - 
                 think will make another def called spell animations so that animations can be called with whatever character
@@ -125,7 +130,6 @@ def get_time():#this is used to get the time whenever i need it, like when a spe
 warriorspells = ["Empty"]
 magespells = ["Empty"]
 healerspells = ["Empty"]
-spellDmgDisplay = ["Empty"]#the above spells are used as the base and they never change, this is a temporary variable set to the spells
 
 monsters = ["Empty"]
 mhp = 0.0
@@ -136,46 +140,51 @@ mphysical_dmg = 0.0
 mmagical_dmg = 0.0
 
 def arrayUpdates(event=None):
-    global warriorspells, magespells, healerspells, spellDmgDisplay
+    global warriorspells, magespells, healerspells
     global monsters
     global difficulty, difficulty_multiplier
     global monsterlvl
     global screenName
     global mhp, mmp, mphysical_defence, mmagical_defence, mphysical_dmg, mmagical_dmg
+    global basedmg
+
+    #----these are temporary variables only used for displaying damage
+    tempBaseSpellDmg = basedmg * 1.5
+    tempLvlDmg = currentlvl*1.5
 
     warriorspells = [
         {
             "Name": "Basic Attack",
             "MP Cost": 0,
-            "Damage": "(Base damage * 1.5)",
+            "Damage": tempBaseSpellDmg,
             "Description": "Hits the target without any MP to lightly damage the target.",
             "Spell Icon": "Images/M_Warrior Spell Icons/m_Basic Attack.png"
         },
         {
             "Name": "Strike",
             "MP Cost": 1,
-            "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
+            "Damage": tempBaseSpellDmg + (1* 3) + tempLvlDmg,
             "Description": "Strikes the target quickly with your sword.",
             "Spell Icon": "Images/M_Warrior Spell Icons/m_Strike.png"
         },
         {
             "Name": "Swordsmanship",
             "MP Cost": 2,
-            "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
+            "Damage": tempBaseSpellDmg + (2 * 3) + tempLvlDmg,
             "Description": "Uses MP to deal massive damage in a short time.",
             "Spell Icon": "Images/M_Warrior Spell Icons/m_Swordsmanship.png"
         },
         {
             "Name": "Warrior's Sword",
             "MP Cost": "100%",
-            "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
-            "Description": "Uses all your MP to deal a very heavy attack.",
+            "Damage": tempBaseSpellDmg + tempLvlDmg,
+            "Description": "Uses all your MP to deal a very heavy attack. Additional damage will depend on the ammount of mp used x 3.",
             "Spell Icon": "Images/M_Warrior Spell Icons/m_Warrior's Sword.png"
         },
         {
             "Name": "Advance Shield",
             "MP Cost": 3,
-            "Damage": "(Base Damage * 1.5) + (MP Used * 3) + (lvl * 1.5)",
+            "Damage": tempBaseSpellDmg + (3 * 3) + tempLvlDmg,
             "Description": "Hits the target to deal damage and steals some HP with MP and generates a shield with it to advance next turn with. The shield is generated at random but will never be less than half of your outputed damage.",
             "Spell Icon": "Images/M_Warrior Spell Icons/m_Advance Shield.png"
         }
@@ -185,7 +194,7 @@ def arrayUpdates(event=None):
         {
             "Name": "Staff Attack",
             "MP Cost": 0,
-            "Damage": "Base Damage",
+            "Damage": tempBaseSpellDmg,
             "Description": "Hits the target without any MP to lightly damage the target. Gains 3 MP.",
             "Spell Icon": "Images/Mage Spell Icons/Staff Attack.png"
 
@@ -193,7 +202,7 @@ def arrayUpdates(event=None):
         {
             "Name": "MP Drain",
             "MP Cost": 3,
-            "Damage": "(lvl * 1.5) lowered by 70%",
+            "Damage": (9 + tempLvlDmg)*(1 - 0.70),
             "Description": "Drains the target of MP equal to tripple the MP used. Causes slight damage as the target is being drained. Disables the target for 1 turn due to magic poisoning.",
             "Spell Icon": "Images/Mage Spell Icons/Mp Drain.png"
 
@@ -201,7 +210,7 @@ def arrayUpdates(event=None):
         {
             "Name": "HP Drain",
             "MP Cost": 5,
-            "Damage": "15 + (lvl * 1.5)",
+            "Damage": 15 + tempLvlDmg,
             "Description": "Uses magic to drain the target's HP.",
             "Spell Icon": "Images/Mage Spell Icons/HP Drain.png"
 
@@ -209,7 +218,7 @@ def arrayUpdates(event=None):
         {
             "Name": "Magic Explosion",
             "MP Cost": 10,
-            "Damage": "30 + (lvl * 1.5)",
+            "Damage": 30 + tempLvlDmg,
             "Description": "Explodes MP onto the target to deal massive damage.",
             "Spell Icon": "Images/Mage Spell Icons/Magic Explosion.png"
 
@@ -217,7 +226,7 @@ def arrayUpdates(event=None):
         {
             "Name": "Damage Debuff",
             "MP Cost": 4, 
-            "Damage": "0", 
+            "Damage": 0, 
             "Description": "Reduces  Enemy Damage by 40% for two turns",
             "Spell Icon": "Images/Mage Spell Icons/Damage Debuff.png"
 
@@ -228,14 +237,14 @@ def arrayUpdates(event=None):
         {
             "Name": "Palm Strike",
             "MP Cost": 0,
-            "Damage": "Base Damage",
+            "Damage": tempBaseSpellDmg,
             "Description": "Hits the target without any MP to lightly damage the target.",
             "Spell Icon": "Images/Healer Spell Icons/Palm Strike.png" 
         },
         {
             "Name": "HP Drain",
             "MP Cost": 5,
-            "Damage": "(MP Used * 3) + (lvl * 1.5)",
+            "Damage": 15 + tempLvlDmg,
             "Description": "Drains the target's HP to heal itself.",
             "Spell Icon": "Images/Healer Spell Icons/Hp Drain.png"
 
@@ -243,14 +252,14 @@ def arrayUpdates(event=None):
         {
             "Name": "Protective Barrier",
             "MP Cost": 3,
-            "Damage": "0",
-            "Description": "Casts a strong shield to block enemy attacks. The shield equals (MP Used * 3) * (lvl * 1.5).",
+            "Damage": 0,
+            "Description": "Casts a strong shield to block enemy attacks. The shield equals (MP Used * 3) * {tempLvlDmg}.",
             "Spell Icon": "Images/Healer Spell Icons/Protective Barrier.png"
         },
         {
             "Name": "Sacrificial Lamb",
             "MP Cost": "100%",
-            "Damage": "Current HP / 2 + (MP Used * 3) + (lvl * 1.5) + shield / 2",
+            "Damage": f"Current HP / 2 + (MP Used * 3) + {tempLvlDmg} + shield / 2",
             "Description": "Sacrifices half of your current HP, shield, and all of your MP to deal one high-damage attack. If you have a barrier, it also consumes half of the barrier. Has a 3-turn cooldown starting from the beginning of the fight.",
             "Spell Icon": "Images/Healer Spell Icons/Sacrificial Lamb.png"
 
@@ -258,8 +267,8 @@ def arrayUpdates(event=None):
         {
             "Name": "Heal",
             "MP Cost": 1,
-            "Damage": "0",
-            "Description": "Heals (MP Used * 3) + (lvl * 1.5) HP at the cost of dealing no damage.",
+            "Damage": 0,
+            "Description": f"Heals 3 + {tempLvlDmg} HP at the cost of dealing no damage.",
             "Spell Icon": "Images/Healer Spell Icons/Heal.png"
         }
     ]
@@ -309,96 +318,6 @@ def arrayUpdates(event=None):
 
         #will create an array for spells below too spells so they can be global
 
-    if character_selected == "Warrior":
-        spellDmgDisplay = warriorspells
-    elif character_selected == "Mage":
-        spellDmgDisplay = magespells
-    elif character_selected == "Healer":
-        spellDmgDisplay = healerspells
-
-    """this is going to be used  for spell dmg display calculation - will do this another day
-                nonlocal totaldmg, spelldmg
-            nonlocal mpdmg
-            global monsters
-            nonlocal fightmp, fighthp
-            global currentlvl, basedmg, hp
-            nonlocal player_buffs, player_debuffs, monster_buffs, monster_debuffs
-            global character_selected
-            nonlocal mpused
-            global mmagical_defence, mphysical_defence
-
-            #this is because each spell have either two types of spell damage depending on if they used mp or not
-
-            if spell["Name"] == "Basic Attack" or spell["Name"] == "Staff Attack" or spell["Name"] == "Wand Attack":
-                spelldmg = basedmg*1.5
-
-            elif character_selected == "Warrior": #this is because all of warrior spells uses base dmg while others doesn't + 1.5 bonus multiplier
-                spelldmg = (basedmg*1.5)*1.5 + (currentlvl * 1.5)
-
-            else:
-                spelldmg = (currentlvl * 1.5)
-
-            if mpused > 0: #checks if the mpused is above 0 for mp dmg
-                #for calculating the dmg loss from monster defence
-
-                if mmagical_defence > 0 and mphysical_defence > 0:
-                    totaldmg = spelldmg + mpdmg - (mmagical_defence + mphysical_defence)/2
-
-                elif mmagical_defence > 0:
-                    totaldmg = spelldmg + mpdmg - mmagical_defence/2
-
-                elif mphysical_defence > 0:
-                    totaldmg = spelldmg + mpdmg - mphysical_defence/2
-
-                else: 
-                    totaldmg = spelldmg + mpdmg
-
-            elif mpused == 0: #checks if the mpused is = 0 for no mp dmg
-            
-                #for calculating the dmg loss from monster defence
-                if mmagical_defence > 0 and mphysical_defence > 0:
-                    totaldmg = spelldmg + -(mmagical_defence + mphysical_defence)/2
-
-                elif mmagical_defence > 0:
-                    totaldmg = spelldmg + -mmagical_defence/2
-
-                elif mphysical_defence > 0:
-                    totaldmg =  spelldmg + -mphysical_defence/2
-
-                else: 
-                    totaldmg = spelldmg + 0
-
-            elif mpused == "100%": #this is for the spells that use all mp
-                mpused = fightmp
-                if mmagical_defence > 0 and mphysical_defence > 0:
-                    totaldmg = spelldmg + mpdmg +  - (mmagical_defence + mphysical_defence)/2
-
-                elif mmagical_defence > 0:
-                    totaldmg = spelldmg + mpdmg +  - mmagical_defence/2
-
-                elif mphysical_defence > 0:
-                    totaldmg = spelldmg + mpdmg +  - mphysical_defence/2
-
-                else: 
-                    totaldmg = spelldmg + mpdmg
-
-            #this for adding more damage or reducing damage depending on buffs/debuffs
-            for spellEffects in player_debuffs + player_buffs + monster_buffs:
-                if spellEffects["State"] == "Player Debuff":
-                    if spellEffects["Name"] == "Damage Debuff":
-                        totaldmg *= (1 - spellEffects["Value"])
-                elif spellEffects["State"] == "Player Buff":
-                    pass #i dont know what buffs i will have yet
-                elif spellEffects["State"] == "Monster Buff":
-                    pass #i dont know what buffs i will have yet
-                else:
-                    break
-
-            #this is here because sometimes the total damage will be way below 0 resulting in the spell healing the monster
-            if totaldmg < 0:
-                totaldmg = 0
-    """
-
     if screenName == "Main Screen" or screenName == "Fight Screen":
     #This is for monster parts
         try:
@@ -445,6 +364,8 @@ def arrayUpdates(event=None):
         mmagical_dmg = monsters[index]["magical_dmg"] *difficulty_multiplier
 
 arrayUpdates()
+
+#just used in main screen and character screen to show class bonuses
 spellBonus = ""
 def spellBonusDescriptions():
     global character_selected
@@ -1345,19 +1266,50 @@ def mainscreen():
     #this is for the fight log so everyone can see whats happening in the fight, its here because after you the fight you might want to see what happend.
     fightlog_box = tk.Text(window, width=40, height=10, font = ("Ariel", 12, "bold"), fg="black", bg="purple", wrap="word")
     fightlog_box.place(relx=0.013, rely=0.14, anchor="w") 
-    fightlog_box.configure(state="disabled")  # lock it so the player can't type in it'
+    fightlog_box.configure(state="disabled")   
 
+    #game introduction or just give text back from previous log
     if numOfFights > 0:
                 #update fightlog
         fightlog_box.configure(state="normal")    # unlock so it can be written to
         fightlog_box.insert("end", fightLogTxt) 
         fightlog_box.see("end")                   # scroll down to the newest line
-        fightlog_box.configure(state="disabled")  # lock it so the player can't type in it'
+        fightlog_box.configure(state="disabled")   
     else:                  
-        #update fightlog - this is like a welcome message and a game introduction
+        #--------------update fightlog - this is like a welcome message and a game introduction - mostly used .after so it isnt all written at one time.
         fightlog_box.configure(state="normal")    # unlock so it can be written to
-        fightlog_box.insert("end", f"{get_time()} ") 
-        fightlog_box.configure(state="disabled")  # lock it so the player can't type in it'
+        
+        #-------connecting to server message
+        fightlog_box.insert("end", f"{get_time()} Connecting to server")
+        fightlog_box.configure(state="disabled")
+
+        def addToFightLog(message): #this def is so that when typing access granted and the time stamp after that the time stamp isnt the same as the connecting portion. without this all times will be the same
+            fightlog_box.configure(state="normal")
+
+            if message != "":
+                fightlog_box.insert(tk.END, f"{get_time()} {message}")
+            else:
+                fightlog_box.insert(tk.END, f"{get_time()} ")
+
+            fightlog_box.configure(state="disabled")
+
+        fightlog_box.after(999, fightlog_box.configure, state="normal") 
+        fightlog_box.after(1000, fightlog_box.insert, tk.END, ".") 
+        fightlog_box.after(1001, fightlog_box.configure, state="disabled") 
+
+        fightlog_box.after(1999, fightlog_box.configure, state="normal") 
+        fightlog_box.after(2000, fightlog_box.insert, tk.END, ".") 
+        fightlog_box.after(2001, fightlog_box.configure, state="disabled") 
+
+        fightlog_box.after(2999, fightlog_box.configure, state="normal") 
+        fightlog_box.after(3000, fightlog_box.insert, tk.END, ".\n") 
+        fightlog_box.after(3001, fightlog_box.configure, state="disabled") 
+
+        fightlog_box.after(4000, addToFightLog, "Connection Succeeded.\n") 
+
+        fightlog_box.after(4097, fightlog_box.configure, state="normal")# lock it so the player can't type in it
+        fightlog_box.after(4098, addToFightLog, "") 
+        fightlog_box.after(4099, fightlog_box.configure, state="disabled") 
         
         linePaused = False #used in the def below to display the timer properly
         def gameIntroduction(text_widget, messages, delay=50, line_pause=700, msg_idx=0, char_idx=0): #text widget is the fightbox, messages is the value passed on from gameintromessages, delay is the value used in the .timeafter
@@ -1369,6 +1321,7 @@ def mainscreen():
                 if char_idx < len(current_msg):
                     if linePaused == True:
                         text_widget.insert(tk.END, f"{get_time()} ")
+
                     text_widget.insert(tk.END, current_msg[char_idx])
                     text_widget.see(tk.END)
                     text_widget.after(delay, gameIntroduction, text_widget, messages, delay, line_pause, msg_idx, char_idx + 1)
@@ -1382,8 +1335,6 @@ def mainscreen():
                 fightlog_box.configure(state="disabled")  # lock it so the player can't type in it
 
         gameIntroductionMessages = [
-            "Connecting to server...",
-            "Access granted!",
             "Welcome to the Last Standing City.",
             "You've seen what became of the world when the Omarks invaded.",
             "Luckly people like you awakened and have the powers to protect humanity.",
@@ -1393,12 +1344,11 @@ def mainscreen():
             "And win against the Invaders to reclaim our world!",
         ]
 
-        #warning message that a monster is approaching. 
-        messagebox.showwarning(
-            "WARNING! WARNING! WARNING!",
-            "A monster is approaching! Prepare yourself for battle!"
-        )
-        gameIntroduction(fightlog_box, gameIntroductionMessages)
+        fightlog_box.after(4102, gameIntroduction, fightlog_box, gameIntroductionMessages)         
+
+        window.after(20502, messagebox.showwarning,
+                    "WARNING! WARNING! WARNING!",
+                    "A monster is approaching! Prepare yourself for battle!")
 
     #---------------character------------------
     #label for character name
@@ -1409,7 +1359,6 @@ def mainscreen():
     name_lab.place(relx=0.25, rely=0.31, anchor="center") # "w" anchors it to the West/Left side
 
     #picture for their char - will need to use if to determine which char is shown
-
     classimgs_lab= tk.Label(window, image=None, bg="purple")
     classimgs_lab.place(relx=0.25, rely=0.55, anchor="center") # "w" anchors it to the West/Left side    
 
@@ -1728,42 +1677,67 @@ def mainscreen():
         messagebox.showinfo(f"{lvlupnotification}", f"Your current level is LV.{currentlvl}!")
         #update fightlog
         fightlog_box.configure(state="normal")    # unlock so it can be written to
-        fightlog_box.insert("end", "You Have Leveled Up!") 
-        if lvlGain == 1: #this is really here so lvls is plural should said lvls
-            fightlog_box.insert("end", "You have gained 1 lvl.")
-        else:
-            fightlog_box.insert("end", f"You have gained {lvlGain} lvls.") 
-
-        fightlog_box.insert("end", f"Your current Level is LVL {currentlvl}.")
+        fightlog_box.insert("end", f"{get_time()} You Have Leveled Up!\n") 
         fightlog_box.see("end")                   # scroll down to the newest line
-        fightlog_box.configure(state="disabled")  # lock it so the player can't type in it'
+
+        if lvlGain == 1: #this is really here so lvls is plural should said lvls
+            fightlog_box.insert("end", f"{get_time()} You have gained 1 lvl.\n")
+            fightlog_box.see("end")                   # scroll down to the newest line
+
+        else:
+            fightlog_box.insert("end", f"{get_time()} You have gained {lvlGain} lvls.\n") 
+            fightlog_box.see("end")                   # scroll down to the newest line
+
+        fightlog_box.insert("end", f"{get_time()} Your current Level is LVL {currentlvl}.\n")
+        fightlog_box.see("end")                   # scroll down to the newest line
+        fightlog_box.configure(state="disabled")   
 
     elif fightWon == False and numOfFights > 0:
         messagebox.showinfo("You Have Lost", f"Your current level is LVL {currentlvl}!")
 
         #update fightlog
         fightlog_box.configure(state="normal")    # unlock so it can be written to
-        fightlog_box.insert("end", "You Have Lost!") 
-        if lvlLoss == 1: #this is really here so lvls is plural should said lvls
-            fightlog_box.insert("end", "You Have Lost 1 lvl.")
-        else:
-            fightlog_box.insert("end", f"You have gained {lvlGain} lvls.") 
-
-        fightlog_box.insert("end", f"Your current Level is LVL {currentlvl}.")
+        fightlog_box.insert("end", f"{get_time()} You Have Lost!\n") 
         fightlog_box.see("end")                   # scroll down to the newest line
-        fightlog_box.configure(state="disabled")  # lock it so the player can't type in it'
+        
+        expLoss = (30 * (1.20 ** (currentlvl - 1)) )*difficulty_multiplier
+        
+        fightlog_box.insert("end", f"{get_time()} You have lost {expLoss} exp.\n") 
+        fightlog_box.see("end")                   # scroll down to the newest line
+
+        if  lvlLoss == 0:#this portion just here in case you didnt loose any lvls
+            pass
+
+        elif lvlLoss == 1: #this is really here so lvls is plural should said lvls
+            fightlog_box.insert("end", f"{get_time()} You Have Lost 1 lvl.\n")
+            fightlog_box.see("end")                   # scroll down to the newest line
+
+        else:
+            fightlog_box.insert("end", f"{get_time()} You Have Lost {lvlLoss} lvls.\n")
+            fightlog_box.see("end")                   # scroll down to the newest line
+
+        fightlog_box.insert("end", f"{get_time()} Your current Level is LVL {currentlvl}.\n")
+        fightlog_box.see("end")                   # scroll down to the newest line
+        fightlog_box.configure(state="disabled")   
 
     def startfight():
         global fightstatus, fightLogTxt
-
         fightLogTxt =  fightlog_box.get("1.0", "end-1c")    # all the text ("end-1c" skips the extra final newline) saves text
 
         try:
             if difficulty != "":
+                try:
+                    for after_id in window.tk.call('after', 'info'):
+                        fightlog_box.after_cancel(after_id)
+                except Exception as e:
+                    print ("There are no text waiting to be written in fightlog, or ", e)
+                    raise ValueError
+
                 clearWindow()
                 fightstatus = "Fight Started"
                 window.update_idletasks() 
                 loadingpage()
+
             else: 
                 raise ValueError
         except ValueError:
@@ -1774,16 +1748,13 @@ def mainscreen():
     startfight_but.place(relx=0.5, rely=0.47, anchor="center")
 
 def fightscreen():
-    global difficulty, difficulty_multiplier
-    global monstername
+    global difficulty, difficulty_multiplier 
     global magespells, healerspells, warriorspells
     global character_selected
     global currentlvl, monsterlvl
-    global name
-    global monsters
-    global hp, mp, basedmg, currentexp, pastlvl
-    global expneeded
-    global fightstatus
+    global name, monsters, monstername
+    global hp, mp, basedmg, currentexp, pastlvl, expneeded
+    global fightstatus, fightLogTxt
     global timer
     global physical_defence, magical_defence #used when monster is attacking player
     global pressedEndFight
@@ -1797,82 +1768,80 @@ def fightscreen():
     sound()
     arrayUpdates() #updates for monster stuff mainly - going to take this part out and keep it in main screen with an iff and everything so that it will change depending on the difficulty - only here temporarily so everything works - can get rid of it once dropdown works correctly
 
-    #this because of end fight button sends back to fight screen
-    if pressedEndFight == False:
-
-        difficulty_choice = difficulty.get()
-        timer = 60 #reassigning because without on 2nd fight will be messed up
-        #timerExists = False #used to check if the timer exists or not - if it does then it will be destroyed and a new one will be created
-        oneSecondCountdown = None #used for the timer variable in countdown
-        pressedEndTurn = False # this is to properly destroy countdown timer if player presses end turn button instead of waiting for the timer to run out - if this is true then the timer will be destroyed and a new one will be created
-
-        # anything added to these debuffs/buffs must follow a form of - EX: "State":" "Player Debuff", "Name": "Damage Debuff", "Turns(how long it lasts- dont include this paraenthesis)": 2, "Effect": "blah blah blah", "Value": 0.40 - the value is only thing used for calculation - anything that only adds values without any turn cooldown should not be added
-        #states are the array name without the s on the end
-        #states are for the for loop because im putting multiple lists in the loop so need an if statement to differenciate between them.
-        #for -% its always totaldmg * (1 - debuff) #debuff should always be a decimal, ex .40 , thi is effectively 100% - 40%- or you can do totaldmg *= 0.60
-        player_buffs = []   
-        player_debuffs = []   
-        monster_buffs = []  
-        monster_debuffs = [] 
-
-        playerShieldLoss = 0 #used in print messages so player knows if they lost shields.
-        monsterShieldLoss = 0
-        playerShieldGain = 0 #used in the print message
-        monsterShieldGain = 0 #used in print message - currently not used because monsters dont have spells that gain shields currently
+    difficulty_choice = difficulty.get()
+    timer = 60 #reassigning because without on 2nd fight will be messed up
+    #timerExists = False #used to check if the timer exists or not - if it does then it will be destroyed and a new one will be created
+    oneSecondCountdown = None #used for the timer variable in countdown
+    pressedEndTurn = False # this is to properly destroy countdown timer if player presses end turn button instead of waiting for the timer to run out - if this is true then the timer will be destroyed and a new one will be created
 
 
-        characterTurn = True
-        monsterTurn = False
+    """     Buffs/Debuffs Arrays Explanation
+    anything added to these debuffs/buffs must follow a form of - EX: "State":" "Player Debuff", "Name": "Damage Debuff", "Turns(how long it lasts- dont include this paraenthesis)": 2, "Effect": "blah blah blah", "Value": 0.40 - the value is only thing used for calculation - anything that only adds values without any turn cooldown should not be added
+    states are the array name without the s on the end
+    states are for the for loop because im putting multiple lists in the loop so need an if statement to differenciate between them.
+    for -% its always totaldmg * (1 - debuff) #debuff should always be a decimal, ex .40 , thi is effectively 100% - 40%- or you can do totaldmg *= 0.60"""
+    player_buffs = []   
+    player_debuffs = []   
+    monster_buffs = []  
+    monster_debuffs = [] 
 
-        def pause(ms):#this will be used for spell animations and turn ends/starts so everything isn't instant
-            done = tk.IntVar()
-            window.after(ms, done.set, 1)    # after ms milliseconds, flip the variable
-            try:
-                window.wait_variable(done)   # this line waits until `done` changes
-            except tk.TclError:              # the window was closed while waiting
-                return False
-            return True
+    playerShieldLoss = 0 #used in print messages so player knows if they lost shields.
+    monsterShieldLoss = 0
+    playerShieldGain = 0 #used in the print message
+    monsterShieldGain = 0 #used in print message - currently not used because monsters dont have spells that gain shields currently
 
-        #used for calculations in fight to exit loop and also display variables - used so they dont change the innitial variables - will cause a bug and game may crash because if remove the if makes a infinite loop
-        if fightHpandMpset == False:
-            fighthp = hp
-            #mhp is made inside  - monster hp
-            fightmp = mp
-            #mmp is made inside - monster mp
+    characterTurn = True
+    monsterTurn = False #haven't worked with this yet
 
-            #shield is used the same as hp but it doesnt kill u if it reaces 0, its used in place of hp.
-            playershield = 0
-            playershield_text = tk.StringVar()
-            playershield_text.set(f"Shield: {playershield}")  
+    def pause(ms):#this will be used for spell animations and turn ends/starts so everything isn't instant
+        done = tk.IntVar()
+        window.after(ms, done.set, 1)    # after ms milliseconds, flip the variable
+        try:
+            window.wait_variable(done)   # this line waits until `done` changes
+        except tk.TclError:              # the window was closed while waiting
+            return False
+        return True
 
-            monstershield = 0
-            monstershield_text = tk.StringVar()
-            monstershield_text.set(f"Shield: {monstershield}")  
+    #used for calculations in fight to exit loop and also display variables - used so they dont change the innitial variables - will cause a bug and game may crash because if remove the if makes a infinite loop
+    if fightHpandMpset == False:
+        fighthp = hp
+        #mhp is made inside  - monster hp
+        fightmp = mp
+        #mmp is made inside - monster mp
 
-        #------------set background-----------
-        #mob fight background
-        if monstername == "Bulmar" or "Goylca" or "Hierophant":
+        #shield is used the same as hp but it doesnt kill u if it reaces 0, its used in place of hp.
+        playershield = 0
+        playershield_text = tk.StringVar()
+        playershield_text.set(f"Shield: {playershield}")  
 
-            fightscreenimg = tk.PhotoImage(file="Images/mobfightbg.png")
-            fightscreenimg_lab = tk.Label(window, image=fightscreenimg)
-            fightscreenimg_lab.place(x=0, y=0, relwidth=1, relheight=1) # relwidth/height=1 stretches it 100%
-                #without this it wouldnt load for some reason - directly saving the whole bg 
-            fightscreenimg_lab.image = fightscreenimg 
+        monstershield = 0
+        monstershield_text = tk.StringVar()
+        monstershield_text.set(f"Shield: {monstershield}")  
 
-        #boss fight background
-        elif monstername == "Krosmo Crusher":
+    #------------set background-----------
+    #mob fight background
+    if monstername == "Bulmar" or "Goylca" or "Hierophant":
 
-            fightscreenimg = tk.PhotoImage(file="Images/bossfightbg.png")
-            fightscreenimg_lab = tk.Label(window, image=fightscreenimg)
-            fightscreenimg_lab.place(x=0, y=0, relwidth=1, relheight=1) # relwidth/height=1 stretches it 100%
+        fightscreenimg = tk.PhotoImage(file="Images/mobfightbg.png")
+        fightscreenimg_lab = tk.Label(window, image=fightscreenimg)
+        fightscreenimg_lab.place(x=0, y=0, relwidth=1, relheight=1) # relwidth/height=1 stretches it 100%
             #without this it wouldnt load for some reason - directly saving the whole bg 
-            fightscreenimg_lab.image = fightscreenimg 
+        fightscreenimg_lab.image = fightscreenimg 
 
-        timerExists = True #used to check if the timer exists or not - if it does then it will be destroyed and a new one will be created
-        timerlab_text = tk.StringVar()
-        timerlab_text.set(f"{timer}")
-        timer_lab= tk.Label(window, textvariable=f"{timerlab_text}", font = ("Ariel", 24, "bold"), fg="black", bg="purple")
-        timer_lab.place(relx=0.5, rely=0.1, relwidth=0.1, relheight=0.1, anchor="center")
+    #boss fight background
+    elif monstername == "Krosmo Crusher":
+
+        fightscreenimg = tk.PhotoImage(file="Images/bossfightbg.png")
+        fightscreenimg_lab = tk.Label(window, image=fightscreenimg)
+        fightscreenimg_lab.place(x=0, y=0, relwidth=1, relheight=1) # relwidth/height=1 stretches it 100%
+        #without this it wouldnt load for some reason - directly saving the whole bg 
+        fightscreenimg_lab.image = fightscreenimg 
+
+    timerExists = True #used to check if the timer exists or not - if it does then it will be destroyed and a new one will be created
+    timerlab_text = tk.StringVar()
+    timerlab_text.set(f"{timer}")
+    timer_lab= tk.Label(window, textvariable=f"{timerlab_text}", font = ("Ariel", 24, "bold"), fg="black", bg="purple")
+    timer_lab.place(relx=0.5, rely=0.1, relwidth=0.1, relheight=0.1, anchor="center")
 
     #-----------create character img & label/hp/mp label-------------
     #label for character name
@@ -1897,7 +1866,8 @@ def fightscreen():
     fightlog_box.place(relx=0.018, rely=0.16, anchor="w") 
     #update fightlog
     fightlog_box.configure(state="normal")    # unlock so it can be written to
-    fightlog_box.insert("end", f"{get_time()} Fight Has Started!\n") 
+    fightlog_box.insert("end", fightLogTxt) 
+    fightlog_box.insert("end", f"\n{get_time()} Fight Has Started!\n") 
     fightlog_box.see("end")                   # scroll down to the newest line
     fightlog_box.configure(state="disabled")  # lock it so the player can't type in it
 
@@ -2122,18 +2092,16 @@ def fightscreen():
         global fightHpandMpset
         nonlocal oneSecondCountdown
 
-        print("Fight has ended")
-
         #update fightlog
         fightlog_box.configure(state="normal")    # unlock so it can be written to
-        fightlog_box.insert("end", f"{get_time()} Fight Has Ended!") 
+        fightlog_box.insert("end", f"\n{get_time()} Fight Has Ended!\n") 
         fightlog_box.see("end")                   # scroll down to the newest line
         fightlog_box.configure(state="disabled")  # lock it so the player can't type in it    
+        fightLogTxt =  fightlog_box.get("1.0", "end-1c")    # all the text ("end-1c" skips the extra final newline)
 
         #destroy everything
         try:
             time.sleep(1.5) #makes wait before switching back to main screen
-
                     #checks to see if countdown is still counting down and if is, it cancels it
             if oneSecondCountdown is not None and oneSecondCountdown in window.tk.call('after', 'info'):
                 try:
@@ -2160,6 +2128,8 @@ def fightscreen():
 
             if currentexp < 0: #if current exp is a negative it lowers your lvl - 
 
+
+                #this is for for if exp is negative and need to reduce lvls
                 while currentexp < 0: #in a while because if expneeded is way more than 1 lvl it needs to keep going to lvl matches
                     if currentlvl > 1:
                         #lvl and exp decrease
@@ -2224,7 +2194,6 @@ def fightscreen():
         numOfFights += 1
         fightstatus = "Fight Ended"
         difficulty_choice = None
-        fightLogTxt =  fightlog_box.get("1.0", "end-1c")    # all the text ("end-1c" skips the extra final newline)
 
         #sends to loading page
         loadingpage()
@@ -2429,7 +2398,6 @@ def fightscreen():
             global mmagical_defence, mphysical_defence
 
             #this is because each spell have either two types of spell damage depending on if they used mp or not
-
             if spell["Name"] == "Basic Attack" or spell["Name"] == "Staff Attack" or spell["Name"] == "Wand Attack":
                 spelldmg = basedmg*1.5
 
@@ -2906,20 +2874,18 @@ def fightscreen():
             attackCount = 0
 
             #will need to set it where if dont have enough mp will end turn and attackCount will equal 3
-            while attackCount < 4:
+            while attackCount <= 2:
 
                 if  mmp >= 3: #this checks the lowest mp needed to cast all spells, further checks inside
-                        if mmp >= 5:
+                        if mmp >= 5 and totalAttackCount % 9 == 0:
                             # 5mp spell - casts 1 per 9 attacks 
-                            if totalAttackCount % 9 == 0:
-                                mspellcasted = mspellnamefivemp #this variable will mostly be used in the future when i make a chat for fight stuff
-                                mmpUsed = 5
+                            mspellcasted = mspellnamefivemp #this variable will mostly be used in the future when i make a chat for fight stuff
+                            mmpUsed = 5
 
                         #4mp spell  can cast every 6 attacks 
-                        if mmp >=4: 
-                            if totalAttackCount % 6 == 0:
-                                mmpUsed = 4
-                                mspellcasted = mspellnamefourmp
+                        elif mmp >=4 and totalAttackCount % 6 == 0: 
+                            mmpUsed = 4
+                            mspellcasted = mspellnamefourmp
 
                         else:
                             #3mp spell - can be cast whenever.
@@ -2962,6 +2928,13 @@ def fightscreen():
                     monsterSkippedTurn = True
                     attackCount += 3
 
+                #this because monsters have two conditions to skipping turn, either it started with no mp or ran out of mp during its turn.
+                if monsterSkippedTurn == True and mmp >= 20:
+                    pass #might include other stuff here later but for now its mostly to skip what happens next
+
+                else: #just want the attackcount to increase if monster didnt skip its turn and actually hitted
+                    totalAttackCount += 1 
+
         #-----------------end of turn stuff--------------------
         try:
             time.sleep(1.5) #makes wait before switch turns
@@ -2979,18 +2952,6 @@ def fightscreen():
 
             fightlog_box.see("end")                   # scroll down to the newest line
             fightlog_box.configure(state="disabled")  # lock it so the player can't type in it
-
-            if monsterSkippedTurn == True:
-                #this because monsters have two conditions to skipping turn, either it started with no mp or ran out of mp during its turn.
-                if monsterSkippedTurn == True and mmp == 20: 
-                    pass #might include other stuff here later but for now its mostly to skip what happens next
-                else:
-                    totalAttackCount += temporaryattackCount 
-            else:
-                if monsterSkippedTurn == True and mmp == 20: 
-                    pass #might include other stuff here later but for now its mostly to skip what happens next
-                else:
-                    totalAttackCount += attackCount 
 
             #this will reset timer if the player didnt end turn
             if timer > 0:
